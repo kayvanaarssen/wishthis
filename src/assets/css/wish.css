@@ -1,9 +1,101 @@
-.image.preview {
-    height: var(--wishPreviewHeight) !important;
+/**
+ * Details
+ */
+.ui.modal.wish-details.overlay.fullscreen {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: space-between;
 
-    object-fit: cover;
-    object-position: 50%;
+    height: 100%;
+}
+.ui.modal.wish-details.overlay.fullscreen > .content.content.content {
+    height: 100%;
+    min-height: 0;
+}
 
-    background-color: #fff;
-    cursor: pointer;
+/** Image */
+.ui.modal.wish-details .wish-image {
+    --imageHeight: 40vh;
+
+    width: 100%;
+    max-height: var(--imageHeight);
+}
+@media (min-width: 768px) {
+    .ui.modal.wish-details .wish-image {
+        width: 40%;
+        max-height: 100%;
+    }
+}
+@media (prefers-color-scheme: dark) {
+    .ui.modal.wish-details .wish-image {
+        filter: brightness(80%);
+    }
+}
+
+.ui.modal.wish-details .wish-image :is(img, svg) {
+    max-height: inherit;
+    margin: auto;
+}
+
+/** Placeholder */
+.ui.modal.wish-details .wish-image .ui.placeholder {
+    height: 100%;
+}
+.ui.modal.wish-details .wish-image .ui.placeholder .image:not(.header):not(.ui):not(.icon) {
+	height: var(--imageHeight);
+}
+
+/** Description */
+.ui.modal.wish-details .description.description {
+    width: 100%;
+}
+
+.ui.modal.wish-details .wish-image + .description {
+    padding-left: 2em;
+}
+
+/** Actions */
+.ui.modal.wish-details > .actions {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.25em;
+    padding: 1rem !important;
+}
+
+.ui.modal.wish-details > .actions .button {
+    margin: 0;
+    flex: 1 1 auto;
+}
+@media (max-width: 1023.9px) {
+    .ui.modal.wish-details > .actions .button {
+        padding: 0.78571429em !important;
+    }
+}
+@media (min-width: 1024px) {
+    .ui.modal.wish-details > .actions .button {
+        flex: 0 1 auto;
+    }
+}
+
+.ui.modal.wish-details > .actions .button i {
+    display: contents;
+}
+@media (min-width: 768px) {
+    .ui.modal.wish-details > .actions .button i {
+        display: none;
+    }
+}
+@media (min-width: 1024px) {
+    .ui.modal.wish-details > .actions .button i {
+        display: inline;
+    }
+}
+
+.ui.modal.wish-details > .actions .button span {
+    display: none;
+}
+@media (min-width: 768px) {
+    .ui.modal.wish-details > .actions .button span {
+        display: inline;
+    }
 }

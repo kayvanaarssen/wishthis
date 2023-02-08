@@ -9,7 +9,7 @@ $(function() {
 
         form.addClass('loading');
 
-        fetch('/src/api/database-test.php', {
+        fetch('/api/database-test', {
             method : 'POST',
             body   : formDatabase
         })

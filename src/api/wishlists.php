@@ -1,19 +1,14 @@
 <?php
 
 /**
- * wishlists.php
+ * Wishlists
  *
  * @author Jay Trees <github.jay@grandel.anonaddy.me>
  */
 
 namespace wishthis;
 
-$api      = true;
-$response = array();
-
-ob_start();
-
-require '../../index.php';
+global $page, $database;
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'POST':
@@ -21,8 +16,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
             /**
              * Create
              */
-            $user_id   = Sanitiser::getNumber($_SESSION['user']->id);
-            $wish_name = Sanitiser::getTitle($_POST['wishlist-name']);
+            $user_id       = Sanitiser::getNumber($_SESSION['user']->id);
+            $wishlist_name = Sanitiser::getTitle($_POST['wishlist-name']);
+            $wishlist_hash = sha1(time() . $user_id . $wishlist_name);
 
             $database->query(
                 'INSERT INTO `wishlists` (
@@ -30,10 +26,15 @@ switch ($_SERVER['REQUEST_METHOD']) {
                     `name`,
                     `hash`
                 ) VALUES (
-                     ' . $user_id . ',
-                    "' . $wish_name . '",
-                    "' . sha1(time() . $user_id . $wish_name) . '"
-                );'
+                    :user_id,
+                    :wishlist_name,
+                    :wishlist_hash
+                );',
+                array(
+                    'user_id'       => $user_id,
+                    'wishlist_name' => $wishlist_name,
+                    'wishlist_hash' => $wishlist_hash,
+                )
             );
 
             $response['data'] = array(
@@ -43,15 +44,18 @@ switch ($_SERVER['REQUEST_METHOD']) {
             /**
              * Request more wishes
              */
-            $wishlistID = Sanitiser::getNumber($_POST['wishlist-id']);
+            $wishlist_id = Sanitiser::getNumber($_POST['wishlist-id']);
 
             /** Get last notification time */
             $wishlistQuery = $database
             ->query(
                 'SELECT *
                    FROM `wishlists`
-                  WHERE `id` = ' . $wishlistID . '
-                    AND (`notification_sent` < (CURRENT_TIMESTAMP - INTERVAL 1 DAY) OR `notification_sent` IS NULL);'
+                  WHERE `id` = :wishlist_id
+                    AND (`notification_sent` < (CURRENT_TIMESTAMP - INTERVAL 1 DAY) OR `notification_sent` IS NULL);',
+                array(
+                    'wishlist_id' => $wishlist_id,
+                )
             );
 
             $wishlist = $wishlistQuery->fetch();
@@ -83,7 +87,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
                     ->query(
                         'UPDATE `wishlists`
                             SET `notification_sent` = CURRENT_TIMESTAMP
-                          WHERE `id` = ' . $wishlist['id'] . ';'
+                          WHERE `id` = :wishlist_id;',
+                        array(
+                            'wishlist_id' => $wishlist['id'],
+                        )
                     );
                 }
             }
@@ -94,12 +101,15 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
 
     case 'GET':
-        if (isset($_GET['wishlist'], $_GET['priority'])) {
+        if (isset($_GET['wishlist_id'], $_GET['priority'])) {
             /**
-             * Get wishlist cards
+             * Get wishlist cards with priority
              */
-            $wishlist = new Wishlist($_GET['wishlist']);
-            $options  = array();
+            $wishlist = new Wishlist($_GET['wishlist_id']);
+            $options  = array(
+                'style'        => $_GET['style'],
+                'placeholders' => array(),
+            );
             $where    = array(
                 'wishlist' => '`wishlist` = ' . $wishlist->id,
                 'priority' => '`priority` = ' . $_GET['priority'],
@@ -113,66 +123,93 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 $where['priority'] = '`priority` IS NULL';
             }
 
-            $options = array(
-                'WHERE' => '(' . implode(') AND (', $where) . ')',
-            );
+            $options['WHERE'] = '(' . implode(') AND (', $where) . ')';
 
             $response['results'] = $wishlist->getCards($options);
+        } elseif (isset($_GET['wishlist_id'])) {
+            /**
+             * Get wishlist by id
+             */
+            $wishlist = new Wishlist($_GET['wishlist_id']);
+
+            if ($wishlist->exists) {
+                /** Determine if user is allowed to access wishlist */
+                if ($_SESSION['user']->isLoggedIn() && $_SESSION['user']->id === $wishlist->user) {
+                    $response['results'] = $wishlist;
+                } else {
+                    http_response_code(403);
+                }
+            } else {
+                http_response_code(404);
+            }
+        } elseif (isset($_GET['wishlist_hash'])) {
+            /**
+             * Get wishlist by hash
+             */
+            $wishlist = new Wishlist($_GET['wishlist_hash']);
+
+            if ($wishlist->exists) {
+                $response['results'] = $wishlist;
+            } else {
+                http_response_code(404);
+            }
         } elseif (isset($_GET['userid']) || isset($_SESSION['user']->id)) {
             /**
              * Get user wishlists
              */
-            $user = isset($_GET['userid']) ? User::getFromID($_GET['userid']) : $_SESSION['user'];
+            $user = $_SESSION['user'];
 
-            $wishlists = $user->getWishlists();
-            $wishlists = array_map(
-                function ($dataWishlist) {
-                    /**
-                     * Format wishlists to fit FUI dropdown
-                     */
-                    $data          = $dataWishlist;
-                    $data['value'] = $dataWishlist['id'];
-                    $data['text']  = $dataWishlist['name'];
+            if (!$user->isLoggedIn()) {
+                $this->response(403);
+            }
 
-                    $wishlist      = new Wishlist($dataWishlist['id']);
-                    $data['cards'] = $wishlist->getCards();
+            $wishlists       = array();
+            $wishlists_items = array();
 
-                    return $data;
-                },
-                $wishlists
-            );
+            foreach ($user->getWishlists() as $wishlist_result) {
+                $wishlist = new Wishlist($wishlist_result['id']);
 
-            $response['results'] = $wishlists;
+                $wishlists[$wishlist->id]       = $wishlist;
+                $wishlists_items[$wishlist->id] = array(
+                    'name'  => $wishlist->name,
+                    'value' => $wishlist->id,
+                    'text'  => $wishlist->name,
+                );
+            }
+
+            $response['wishlists']       = $wishlists;
+            $response['wishlists_items'] = $wishlists_items;
         }
         break;
 
     case 'PUT':
-        parse_str(file_get_contents("php://input"), $_PUT);
+        $_PUT = $this->input;
 
         $database
         ->query(
             'UPDATE `wishlists`
-                SET `name` = "' . Sanitiser::getTitle($_PUT['wishlist_title']) . '"
-              WHERE `id`   =  ' . Sanitiser::getNumber($_PUT['wishlist_id']) . ';'
+                SET `name` = :wishlist_name
+              WHERE `id`   = :wishlist_id',
+            array(
+                'wishlist_name' => Sanitiser::getTitle($_PUT['wishlist_title']),
+                'wishlist_id'   => Sanitiser::getNumber($_PUT['wishlist_id']),
+            )
         );
 
         $response['success'] = true;
         break;
 
     case 'DELETE':
-        parse_str(file_get_contents("php://input"), $_DELETE);
+        $_DELETE = $this->input;
 
         $database->query(
             'DELETE FROM `wishlists`
-                   WHERE `id` = ' . Sanitiser::getNumber($_DELETE['wishlistID']) . ';'
+                   WHERE `id` = :wishlist_id;',
+            array(
+                'wishlist_id' => Sanitiser::getNumber($_DELETE['wishlist_id']),
+            )
         );
 
         $response['success'] = true;
         break;
 }
-
-$response['warning'] = ob_get_clean();
-
-header('Content-type: application/json; charset=utf-8');
-echo json_encode($response);
-die();

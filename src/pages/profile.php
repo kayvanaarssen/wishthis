@@ -8,7 +8,7 @@
 
 namespace wishthis;
 
-$page = new Page(__FILE__, __('Profile'));
+$page = new Page(__FILE__, __('Profile'), 1);
 
 if (isset($_POST['user-id'], $_POST['section'])) {
     $set              = array();
@@ -32,7 +32,7 @@ if (isset($_POST['user-id'], $_POST['section'])) {
             'column' => 'email',
             'key'    => 'user-email',
             'label'  => __('Email'),
-        )
+        ),
     );
     $loginRequired    = false;
 
@@ -87,16 +87,34 @@ if (isset($_POST['user-id'], $_POST['section'])) {
     /**
      * Preferences
      */
-    /** Locale */
-    if (isset($_POST['user-locale']) && $_POST['user-locale'] !== $_SESSION['user']->getLocale()) {
-        $_SESSION['user']->setLocale($_POST['user-locale']);
 
-        $set[] = '`locale` = "' . $_SESSION['user']->getLocale() . '"';
+    /** Language */
+    if (isset($_POST['user-language']) && $_POST['user-language'] !== $_SESSION['user']->getLocale()) {
+        $_SESSION['user']->setLocale($_POST['user-language']);
+
+        $set[] = '`language` = "' . $_SESSION['user']->getLocale() . '"';
 
         $page->messages[] = Page::success(
             sprintf(
-                __('Locale successfully updated!'),
-                '<strong>Locale</strong>'
+                /** TRANSLATORS: %s: The new locale */
+                __('Language set to %s.'),
+                '<strong>' . $_SESSION['user']->getLocale() . '</strong>'
+            ),
+            __('Success')
+        );
+    }
+
+    /** Currency */
+    if (isset($_POST['user-currency']) && $_POST['user-currency'] !== $_SESSION['user']->getLocale() && $_POST['user-currency'] !== $_SESSION['user']->getCurrency()) {
+        $_SESSION['user']->setCurrency($_POST['user-currency']);
+
+        $set[] = '`currency` = "' . $_SESSION['user']->getCurrency() . '"';
+
+        $page->messages[] = Page::success(
+            sprintf(
+                /** TRANSLATORS: %s: The new locale */
+                __('Currency set to %s.'),
+                '<strong>' . $_SESSION['user']->getCurrency() . '</strong>'
             ),
             __('Success')
         );
@@ -115,12 +133,27 @@ if (isset($_POST['user-id'], $_POST['section'])) {
         }
     }
 
+    /** Advertisements */
+    if (isset($_POST['enable-advertisements'])) {
+        $_SESSION['user']->advertisements = true;
+
+        $set[] = '`advertisements` = TRUE';
+    } else {
+        $_SESSION['user']->advertisements = false;
+
+        $set[] = '`advertisements` = FALSE';
+    }
+
+    /** Save */
     if ($set) {
         $database
         ->query(
             'UPDATE `users`
                 SET ' . implode(',', $set) . '
-              WHERE `id` = ' . Sanitiser::getNumber($_POST['user-id'])
+              WHERE `id` = :user_id',
+            array(
+                'user_id' => Sanitiser::getNumber($_POST['user-id']),
+            )
         );
     }
 
@@ -200,8 +233,11 @@ $page->navigation();
                                     <input type="email" name="user-email" value="<?= $_SESSION['user']->email ?>" />
                                 </div>
 
-                                <div class="field">
-                                    <label><?= __('Birthdate') ?></label>
+                                <div class="field" data-content="<?= __('Used to suggest a wishlist called "Birthday", if it\'s coming up.') ?>">
+                                    <label>
+                                        <?= __('Birthdate') ?>
+                                        <i class="ui small circular info icon"></i>
+                                    </label>
 
                                     <div class="ui calendar">
                                         <div class="ui input left icon">
@@ -303,44 +339,51 @@ $page->navigation();
                                 <div class="field">
                                     <label><?= __('Language') ?></label>
 
-                                    <select class="ui search dropdown locale" name="user-locale">
+                                    <select class="ui search dropdown language" name="user-language">
                                         <?php if (!in_array('en_GB', $locales)) { ?>
                                             <option value="<?= 'en_GB' ?>"><?= \Locale::getDisplayName('en_GB', $_SESSION['user']->getLocale()) ?></option>
                                         <?php } ?>
 
                                         <?php foreach ($locales as $locale) { ?>
-                                            <?php if (\Locale::getRegion($locale)) { ?>
-                                                <?php if ($locale === $_SESSION['user']->getLocale()) { ?>
-                                                    <option value="<?= $locale ?>" selected><?= \Locale::getDisplayName($locale, $_SESSION['user']->getLocale()) ?></option>
-                                                <?php } else { ?>
-                                                    <option value="<?= $locale ?>"><?= \Locale::getDisplayName($locale, $_SESSION['user']->getLocale()) ?></option>
-                                                <?php } ?>
+                                            <?php if ($locale === $_SESSION['user']->getLocale()) { ?>
+                                                <option value="<?= $locale ?>" selected><?= \Locale::getDisplayName($locale, $_SESSION['user']->getLocale()) ?></option>
+                                            <?php } else { ?>
+                                                <option value="<?= $locale ?>"><?= \Locale::getDisplayName($locale, $_SESSION['user']->getLocale()) ?></option>
                                             <?php } ?>
                                         <?php } ?>
                                     </select>
                                 </div>
 
-                                <?php if (defined('CHANNELS') && is_array(CHANNELS)) { ?>
-                                    <script type="text/javascript">
-                                        var CHANNELS = <?= json_encode(CHANNELS) ?>;
-                                    </script>
+                                <div class="field">
+                                    <label><?= __('Currency') ?></label>
 
-                                    <div class="field">
-                                        <label><?= __('Channel') ?></label>
+                                    <select class="ui search dropdown currency" name="user-currency">
+                                        <?php
+                                        $currencies = array();
+                                        ?>
 
-                                        <select class="ui search clearable dropdown channel" name="user-channel">
-                                            <option value=""><?= __('Select channel') ?></option>
+                                        <?php foreach ($locales as $locale) { ?>
+                                            <?php
+                                            $currencyFormatter = new \NumberFormatter($locale, \NumberFormatter::CURRENCY);
+                                            $currencyISO       = $currencyFormatter->getSymbol(\NumberFormatter::INTL_CURRENCY_SYMBOL);
+                                            $currencySymbol    = $currencyFormatter->getSymbol(\NumberFormatter::CURRENCY_SYMBOL);
+                                            $currencyValue     = $currencyISO . ' (' . $currencySymbol . ')';
 
-                                            <?php foreach (CHANNELS as $channel) { ?>
-                                                <?php if ($channel['branch'] === $_SESSION['user']->channel) { ?>
-                                                    <option value="<?= $channel['branch'] ?>" selected><?= $channel['label'] ?></option>
-                                                <?php } else { ?>
-                                                    <option value="<?= $channel['branch'] ?>"><?= $channel['label'] ?></option>
-                                                <?php } ?>
+                                            if (in_array($currencyISO, $currencies, true) || $currencyISO === $currencySymbol) {
+                                                continue;
+                                            } else {
+                                                $currencies[] = $currencyISO;
+                                            }
+                                            ?>
+
+                                            <?php if ($currencyISO === $_SESSION['user']->getCurrency()) { ?>
+                                                <option value="<?= $currencyISO ?>" selected><?= $currencyValue ?></option>
+                                            <?php } else { ?>
+                                                <option value="<?= $currencyISO ?>"><?= $currencyValue ?></option>
                                             <?php } ?>
-                                        </select>
-                                    </div>
-                                <?php } ?>
+                                        <?php } ?>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="ui error message"></div>
@@ -387,35 +430,116 @@ $page->navigation();
                     $count_users_rc = reset($count_users_rc);
                     ?>
 
-                    <?php if ($count_users_rc < $count_users_needed) { ?>
-                        <h3 class="ui header"><?= __('Channel') ?></h3>
+                    <div class="ui segment">
+                        <form class="ui form" method="POST">
+                            <input type="hidden" name="user-id" value="<?= $_SESSION['user']->id ?>" />
+                            <input type="hidden" name="section" value="preferences" />
 
-                        <div class="ui segment">
-                            <p><?= __('In order to improve the user experience of wishthis, newer versions are published after an extensive testing period.') ?></p>
-                            <p><?= __('Subscribing to the Stable channel ensures you have the highest possible stability while using wishthis, minimizing the amount of errors you may encounter (if any).') ?></p>
-                            <p><?= __('If you want to speed up the release of newer versions, consider subscribing to the Release candidate of wishthis. A newer version is not published unless the next release candidate has been sufficiently tested.') ?></p>
+                            <?php if (defined('CHANNELS') && is_array(CHANNELS)) { ?>
+                                <script type="text/javascript">
+                                    var CHANNELS = <?= json_encode(CHANNELS) ?>;
+                                </script>
 
-                            <div class="ui primary progress" data-value="<?= $count_users_rc ?>" data-total="<?= $count_users_needed ?>">
-                                <div class="bar">
-                                    <div class="progress"></div>
+                                <div class="field">
+                                    <label><?= __('Channel') ?></label>
+
+                                    <select class="ui search clearable dropdown channel" name="user-channel">
+                                        <option value=""><?= __('Select channel') ?></option>
+
+                                        <?php foreach (CHANNELS as $channel) { ?>
+                                            <?php if ($channel['branch'] === $_SESSION['user']->channel) { ?>
+                                                <option value="<?= $channel['branch'] ?>" selected><?= $channel['label'] ?></option>
+                                            <?php } else { ?>
+                                                <option value="<?= $channel['branch'] ?>"><?= $channel['label'] ?></option>
+                                            <?php } ?>
+                                        <?php } ?>
+                                    </select>
                                 </div>
-                                <div class="label">
-                                    <?php
-                                    $count_users_needed = $count_users_needed - $count_users_rc;
 
-                                    printf(
-                                        _n(
-                                            '%d more subscriber needed',
-                                            '%d more subscribers needed',
-                                            $count_users_needed
-                                        ),
-                                        $count_users_needed
-                                    )
+                                <div class="field">
+                                    <p><?= __('In order to improve the user experience of wishthis, newer versions are published after an extensive testing period.') ?></p>
+                                    <p><?= __('Subscribing to the Stable channel ensures you have the highest possible stability while using wishthis, minimizing the amount of errors you may encounter (if any).') ?></p>
+                                    <p><?= __('If you want to speed up the release of newer versions, consider subscribing to the Release candidate of wishthis. A newer version is not published unless the next release candidate has been sufficiently tested.') ?></p>
+
+                                    <?php if ($count_users_rc < $count_users_needed) { ?>
+                                        <div class="ui primary progress" data-value="<?= $count_users_rc ?>" data-total="<?= $count_users_needed ?>">
+                                            <div class="bar">
+                                                <div class="progress"></div>
+                                            </div>
+                                            <div class="label">
+                                                <?php
+                                                $count_users_needed = $count_users_needed - $count_users_rc;
+
+                                                printf(
+                                                    _n(
+                                                        '%d more subscriber needed',
+                                                        '%d more subscribers needed',
+                                                        $count_users_needed
+                                                    ),
+                                                    $count_users_needed
+                                                )
+                                                ?>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            <?php } ?>
+
+                            <div class="ui error message"></div>
+
+                            <input class="ui primary button"
+                                type="submit"
+                                value="<?= __('Save') ?>"
+                                title="<?= __('Save') ?>"
+                            />
+                        </form>
+                    </div>
+
+                    <div class="ui segment">
+                        <form class="ui form" method="POST">
+                            <input type="hidden" name="user-id" value="<?= $_SESSION['user']->id ?>" />
+                            <input type="hidden" name="section" value="preferences" />
+
+                            <div class="field">
+                                <label><?= __('Advertisements') ?></label>
+
+                                <div class="ui toggle checkbox advertisements">
+                                    <?php
+                                    $user = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
                                     ?>
+
+                                    <?php if (true === $user->advertisements) { ?>
+                                        <input type="checkbox" name="enable-advertisements" checked="checked" />
+                                    <?php } else { ?>
+                                        <input type="checkbox" name="enable-advertisements" />
+                                    <?php } ?>
+
+                                    <label><?= __('Enable advertisements') ?></label>
                                 </div>
                             </div>
-                        </div>
-                    <?php } ?>
+
+                            <div class="field">
+                                <p>
+                                    <?php
+                                    printf(
+                                        /** TRANSLATORS: %s: sponsor me */
+                                        __('Time spent on wishthis is time not doing for-profit work. If you would like to support me but either can\'t or don\'t want to %s, consider selling your body to Google and becoming its product.'),
+                                        '<a href="https://github.com/sponsors/grandeljay" target="_blank">' . __('sponsor me') . '</a>'
+                                    );
+                                    ?>
+                                </p>
+                                <p><?= __('Please remember to add an exception to your ad-blocker and browser.') ?></p>
+                            </div>
+
+                            <div class="ui error message"></div>
+
+                            <input class="ui primary button"
+                                type="submit"
+                                value="<?= __('Save') ?>"
+                                title="<?= __('Save') ?>"
+                            />
+                        </form>
+                    </div>
 
                 </div>
 

@@ -2,7 +2,7 @@ $(function() {
     /**
      * Statistics
      */
-    fetch('/src/api/statistics.php?table=all', {
+    fetch('/api/statistics/all', {
         method: 'GET'
     })
     .then(handleFetchError)
@@ -20,7 +20,7 @@ $(function() {
         var observerCallbackWishes = (entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    showStatistic($('#wishes .value'), response.data.wishes.count, 0);
+                    showStatistic($('#wishes .value'), response.data.wishes.count, 0, response.data.modified);
 
                     observerWishes.unobserve(document.querySelector('#wishes'));
                 }
@@ -29,7 +29,7 @@ $(function() {
         var observerCallbackWishlists = (entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    showStatistic($('#wishlists .value'), response.data.wishlists.count, 0);
+                    showStatistic($('#wishlists .value'), response.data.wishlists.count, 0, response.data.modified);
 
                     observerWishlists.unobserve(document.querySelector('#wishlists'));
                 }
@@ -38,7 +38,7 @@ $(function() {
         var observerCallbackUsers = (entries, observer) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    showStatistic($('#users .value'), response.data.users.count, 0);
+                    showStatistic($('#users .value'), response.data.users.count, 0, response.data.modified);
 
                     observerUsers.unobserve(document.querySelector('#users'));
                 }
@@ -56,7 +56,7 @@ $(function() {
     /**
      * News
      */
-    fetch('/src/api/blog.php', {
+    fetch('/api/blog', {
         method: 'GET'
     })
     .then(handleFetchError)
@@ -66,7 +66,7 @@ $(function() {
     });
 });
 
-function showStatistic(elementStatistic, amount, timeout) {
+function showStatistic(elementStatistic, amount, timeout, modified) {
     const duration        = 2000;
     const intervalInitial = 42;
 
@@ -97,4 +97,13 @@ function showStatistic(elementStatistic, amount, timeout) {
         },
         timeout
     );
+
+    /** Set Popup */
+    $(elementStatistic).popup({
+        'title'     : wishthis.strings.popup.last_modified,
+        'content'   : modified,
+        'position'  : 'right center',
+        'variation' : isDarkMode ? '' : 'inverted',
+        'hoverable' : true,
+    });
 }

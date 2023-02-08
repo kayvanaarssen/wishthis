@@ -8,9 +8,14 @@
 
 namespace wishthis;
 
-$wishlist      = new Wishlist($_GET['hash']);
-$page          = new Page(__FILE__, $wishlist->getTitle());
-$wishlist_user = User::getFromID($wishlist->user);
+$wishlist                                  = new Wishlist($_GET['hash']);
+$wishlist_user                             = User::getFromID($wishlist->user);
+$page                                      = new Page(__FILE__, $wishlist->getTitle());
+$page->stylesheets['wish']                 = 'src/assets/css/wish.css';
+$page->stylesheets['wish-card']            = 'src/assets/css/wish-card.css';
+$page->scripts['wish']                     = 'src/assets/js/parts/wish.js';
+$page->scripts['wishlist-filter-priority'] = 'src/assets/js/parts/wishlist-filter-priority.js';
+$page->scripts['wishlists']                = 'src/assets/js/parts/wishlists.js';
 
 if (!$wishlist->exists) {
     $page->errorDocument(404, $wishlist);
@@ -42,7 +47,7 @@ $page->navigation();
         /**
          * Warn the wishlist creator
          */
-        if ($_SESSION['user']->isLoggedIn() && $_SESSION['user']->id === $wishlist->user && !empty($wishlist->wishes)) { ?>
+        if ($_SESSION['user']->isLoggedIn() && $_SESSION['user']->id === $wishlist->user) { ?>
             <div class="ui icon warning message wishlist-own">
                 <i class="exclamation triangle icon"></i>
                 <div class="content">
@@ -61,7 +66,7 @@ $page->navigation();
             <div class="ui segment">
                 <h2 class="ui header"><?= __('What to do?') ?></h2>
                 <p><?= sprintf(
-                    __('If you found a wish you would like to fulfil, click the %s button and it will temporarily become unavailable for others. Make sure to confirm the fulfilled wish here (i. e. after placing an order), to make the wish permanently unavailable for everybody else.'),
+                    __('If you found a wish you would like to fulfil, click the %s button and it will temporarily become unavailable for others. Make sure to confirm the fulfilled wish here (e. g. after placing an order), to make the wish permanently unavailable for everybody else.'),
                     '<span class="ui primary tiny horizontal label"><i class="gift icon"></i> ' . __('Fulfil wish') . '</span>'
                 ) ?></p>
             </div>
@@ -69,23 +74,7 @@ $page->navigation();
 
         <h2 class="ui header"><?= __('Wishes') ?></h2>
 
-        <?php include 'parts/wishlist-filter.php' ?>
-
-        <div class="wishlist-cards" data-wishlist="<?= $wishlist->id ?>">
-            <?php
-            echo $wishlist->getCards(
-                array(
-                    'WHERE' => '`wishlist` = ' . $wishlist->id . '
-                       AND (
-                              `status`  = ""
-                           OR `status` IS NULL
-                           OR `status`  < unix_timestamp(CURRENT_TIMESTAMP - INTERVAL ' . Wish::STATUS_TEMPORARY_MINUTES . ' MINUTE)
-                       )
-                       AND (`status` != "' . Wish::STATUS_UNAVAILABLE . '" OR `status` IS NULL)'
-                )
-            );
-            ?>
-        </div>
+        <?php include 'parts/wishlist.php' ?>
 
         <div class="ui basic center aligned segment">
             <button class="ui primary button wishlist-request-wishes" data-locale="<?= $wishlist_user->getLocale() ?>">

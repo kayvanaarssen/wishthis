@@ -22,6 +22,7 @@ class Page
     /**
      * Static
      */
+    public const PAGE_API             = '/?page=api';
     public const PAGE_BLOG            = '/?page=blog';
     public const PAGE_CHANGELOG       = '/?page=changelog';
     public const PAGE_HOME            = '/?page=home';
@@ -40,11 +41,11 @@ class Page
     public const PAGE_WISHLISTS_SAVED = '/?page=wishlists-saved';
     public const PAGE_WISHLISTS       = '/?page=wishlists';
 
-    public static function message(string $content = '', string $header = '', string $type = ''): string
+    public static function message(string $content = '', string $header = '', string $type = '', string $class = ''): string
     {
         ob_start();
 
-        $containerClasses = array('ui', 'message');
+        $containerClasses = array('ui', 'message', $class);
         $iconClasses      = array('ui', 'icon');
 
         switch ($type) {
@@ -92,24 +93,24 @@ class Page
         return ob_get_clean();
     }
 
-    public static function error(string $content, string $header = ''): string
+    public static function error(string $content, string $header = '', string $class = ''): string
     {
-        return self::message($content, $header, 'error');
+        return self::message($content, $header, 'error', $class);
     }
 
-    public static function warning(string $content, string $header = ''): string
+    public static function warning(string $content, string $header = '', string $class = ''): string
     {
-        return self::message($content, $header, 'warning');
+        return self::message($content, $header, 'warning', $class);
     }
 
-    public static function info(string $content, string $header = ''): string
+    public static function info(string $content, string $header = '', string $class = ''): string
     {
-        return self::message($content, $header, 'info');
+        return self::message($content, $header, 'info', $class);
     }
 
-    public static function success(string $content, string $header = ''): string
+    public static function success(string $content, string $header = '', string $class = ''): string
     {
-        return self::message($content, $header, 'success');
+        return self::message($content, $header, 'success', $class);
     }
 
     /**
@@ -120,6 +121,9 @@ class Page
     public string $link_preview;
     public string $description;
 
+    public array $stylesheets = array();
+    public array $scripts     = array();
+
     /**
      * __construct
      *
@@ -128,32 +132,33 @@ class Page
      */
     public function __construct(string $filepath, public string $title = 'wishthis', public int $power = 0)
     {
+        global $options;
+
         $this->name         = pathinfo($filepath, PATHINFO_FILENAME);
         $this->description  = __('wishthis is a simple, intuitive and modern wishlist platform to create, manage and view your wishes for any kind of occasion.');
         $this->link_preview = 'https://' . $_SERVER['HTTP_HOST'] . '/src/assets/img/link-previews/default.png';
 
         /**
+         * Install
+         */
+        if (!isset($options) || !$options || !$options->getOption('isInstalled')) {
+            if ('api' !== $this->name) {
+                redirect(Page::PAGE_INSTALL);
+            }
+        }
+
+        /**
          * Session
          */
-        global $options;
+        $user = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
 
-        $user        = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
-        $ignorePower = array(
-            'blog',
-            'changelog',
-            'home',
-            'install',
-            'login',
-            'maintenance',
-            'post',
-            'register',
-            'wishlist',
-        );
-
+        /**
+         * Login
+         */
         if (
                false === $user->isLoggedIn()
             && isset($_GET['page'])
-            && false === in_array($_GET['page'], $ignorePower)
+            && 0 !== $this->power
         ) {
             redirect(Page::PAGE_LOGIN);
         }
@@ -161,7 +166,7 @@ class Page
         /**
          * Power
          */
-        if (isset($user->power) && $user->power < $this->power) {
+        if (isset($user->power) && $user->power < $this->power && 0 !== $this->power) {
             redirect(Page::PAGE_POWER . '&required=' . $this->power);
         }
 
@@ -186,8 +191,8 @@ class Page
         /**
          * Redirect
          */
-        if ($options && $options->getOption('isInstalled') && isset($_GET)) {
-            $url = new URL(http_build_query($_GET));
+        if ($options && $options->getOption('isInstalled') && isset($_GET) && 'api' !== $this->name) {
+            $url = new URL($_SERVER['REQUEST_URI']);
 
             if ($url->url && false === $url->isPretty()) {
                 redirect($url->getPretty());
@@ -204,6 +209,11 @@ class Page
         /**
          * Development environment notice
          */
+        /**
+         * Temporarily deactivate this
+         *
+         * @see https://wishthis.online/blog/looking-for-testers
+         **//*
         if (
                defined('ENV_IS_DEV')
             && true === ENV_IS_DEV
@@ -214,6 +224,7 @@ class Page
                 __('Development environment')
             );
         }
+        */
 
         /**
          * Link preview
@@ -224,11 +235,48 @@ class Page
         if (file_exists($screenshot_filepath)) {
             $this->link_preview = $screenshot_url;
         }
+
+        /**
+         * Stylesheets
+         */
+        $this->stylesheets = array(
+            'fomantic-ui' => 'semantic/dist/semantic.min.css',
+            'default'     => 'src/assets/css/default.css',
+            'dark'        => 'src/assets/css/default/dark.css',
+        );
+
+        /**
+         * Scripts
+         */
+        $this->scripts = array(
+            'j-query'     => 'node_modules/jquery/dist/jquery.min.js',
+            'fomantic-ui' => 'semantic/dist/semantic.min.js',
+            'default'     => 'src/assets/js/default.js',
+        );
+
+        /** html2canvas */
+        $CrawlerDetect = new \Jaybizzle\CrawlerDetect\CrawlerDetect();
+
+        if ($CrawlerDetect->isCrawler()) {
+            $this->scripts['html-2-canvas-1'] = 'node_modules/html2canvas/dist/html2canvas.min.js';
+            $this->scripts['html-2-canvas-2'] = 'src/assets/js/html2canvas.js';
+        }
+
+        /**
+         * Reduce data mode
+         */
+        $this->messages[] = self::info(
+            __('Your device is set to reduce data, some content has been disabled.'),
+            __('Reducing data'),
+            'reduce-data'
+        );
     }
 
     public function header(): void
     {
         global $locales;
+
+        $user = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
         ?>
         <!DOCTYPE html>
         <html lang="<?= $this->language ?>">
@@ -288,47 +336,18 @@ class Page
             /**
              * Stylesheets
              */
+            $stylesheet_page = 'src/assets/css/' . $this->name .  '.css';
 
-            /** Fomantic UI */
-            $stylesheetFomantic         = 'semantic/dist/semantic.min.css';
-            $stylesheetFomanticModified = filemtime($stylesheetFomantic);
-            ?>
-            <link rel="stylesheet"
-                  type="text/css"
-                  href="/<?= $stylesheetFomantic ?>?m=<?= $stylesheetFomanticModified ?>"
-            />
-            <?php
+            if (file_exists($stylesheet_page)) {
+                $this->stylesheets['page'] = $stylesheet_page;
+            }
 
-            /** Default */
-            $stylesheetDefault         = 'src/assets/css/default.css';
-            $stylesheetDefaultModified = filemtime($stylesheetDefault);
-            ?>
-            <link rel="stylesheet"
-                  type="text/css"
-                  href="/<?= $stylesheetDefault ?>?m=<?= $stylesheetDefaultModified ?>"
-            />
-            <?php
-
-            /** Default (Dark) */
-            $stylesheetDefaultDark         = 'src/assets/css/default/dark.css';
-            $stylesheetDefaultDarkModified = filemtime($stylesheetDefaultDark);
-            ?>
-            <link rel="stylesheet"
-                  type="text/css"
-                  href="/<?= $stylesheetDefaultDark ?>?m=<?= $stylesheetDefaultDarkModified ?>"
-            />
-            <?php
-
-            /** Page */
-            $stylesheetPage = 'src/assets/css/' . $this->name .  '.css';
-
-            if (file_exists($stylesheetPage)) {
-                $stylesheetPageModified = filemtime($stylesheetPage);
-
+            foreach ($this->stylesheets as $stylesheet_filepath) {
+                $hash = hash_file('crc32', $stylesheet_filepath);
                 ?>
                 <link rel="stylesheet"
                       type="text/css"
-                      href="/<?= $stylesheetPage ?>?m=<?= $stylesheetPageModified ?>"
+                      href="/<?= $stylesheet_filepath ?>?v=<?= $hash ?>"
                 />
                 <?php
             }
@@ -336,116 +355,23 @@ class Page
             /**
              * Scripts
              */
-            ?>
-            <script type="text/javascript">
-                var locale                  = '<?= str_replace('_', '-', $this->language) ?>';
-                var $_GET                   = JSON.parse('<?= isset($_GET) ? json_encode($_GET) : json_encode(array()) ?>');
-                var wish_status_temporary   = '<?= Wish::STATUS_TEMPORARY ?>';
-                var wish_status_unavailable = '<?= Wish::STATUS_UNAVAILABLE ?>';
-                var wish_status_fulfilled   = '<?= Wish::STATUS_FULFILLED ?>';
-                var text                    = {
-                    modal_error_title     : '<?= __('Error') ?>',
-                    modal_failure_title   : '<?= __('Failure') ?>',
-                    modal_failure_content : '<?= __('The server did not confirm that the action was successful.') ?>',
-                    modal_failure_approve : '<?= __('Thanks for nothing') ?>',
-                    modal_warning_approve : '<?= __('Understood') ?>',
-                    modal_success_title   : '<?= __('Success') ?>',
+            /** Inline */
+            require ROOT . '/src/assets/js/inline.js.php';
 
-                    modal_wishlist_warning_approve : '<?= __('Close this tab') ?>',
-                    modal_wishlist_warning_deny    : '<?= __('Show wishlist anyway') ?>',
-                    modal_wishlist_delete_title    : '<?= __('Really delete?') ?>',
-                    modal_wishlist_delete          : '<?= sprintf(__('Do you really want to delete the wishlist %s?'), '<strong>WISHLIST_NAME</strong>') ?>',
-                    modal_wishlist_delete_approve  : '<?= __('Yes, delete') ?>',
-                    modal_wishlist_delete_deny     : '<?= __('No, keep') ?>',
+            /** Files */
+            $script_page = 'src/assets/js/' . $this->name .  '.js';
 
-                    modal_wish_delete_title   : '<?= __('Really delete?') ?>',
-                    modal_wish_delete         : '<?= __('Would you really like to delete to this wish? It will be gone forever.') ?>',
-                    modal_wish_delete_approve : '<?= __('Yes, delete') ?>',
-                    modal_wish_delete_deny    : '<?= __('No, keep') ?>',
+            if (file_exists($script_page)) {
+                $this->scripts['page'] = $script_page;
+            }
 
-                    form_profile_password : '<?= __('Passwords must match.') ?>',
-
-                    toast_wishlist_rename : '<?= __('Wishlist successfully renamed.') ?>',
-                    toast_wishlist_delete : '<?= __('Wishlist successfully deleted.') ?>',
-
-                    toast_wish_create : '<?= __('Wish successfully created.') ?>',
-                    toast_wish_add    : '<?= __('Wish successfully added.') ?>',
-                    toast_wish_update : '<?= __('Wish information updated.') ?>',
-                    toast_wish_save   : '<?= __("Don't forget to save your changes.") ?>',
-                    toast_wish_delete : '<?= __('Wish successfully deleted.') ?>',
-
-                    toast_clipboard_error_title : '<?= __('Error') ?>',
-                    toast_clipboard_error       : '<?= __('Unable to copy to clipboard. There is likely a permission issue.') ?>',
-                    toast_clipboard_success     : '<?= __('Link copied to clipboard.') ?>',
-
-                    form_prompt_empty                : '<?= __('{name} must have a value') ?>',
-                    form_prompt_checked              : '<?= __('{name} must be checked') ?>',
-                    form_prompt_email                : '<?= __('{name} must be a valid e-mail') ?>',
-                    form_prompt_url                  : '<?= __('{name} must be a valid URL') ?>',
-                    form_prompt_regExp               : '<?= __('{name} is not formatted correctly') ?>',
-                    form_prompt_integer              : '<?= __('{name} must be an integer') ?>',
-                    form_prompt_decimal              : '<?= __('{name} must be a decimal number') ?>',
-                    form_prompt_number               : '<?= __('{name} must be set to a number') ?>',
-                    form_prompt_is                   : '<?= __('{name} must be "{ruleValue}"') ?>',
-                    form_prompt_isExactly            : '<?= __('{name} must be exactly "{ruleValue}"') ?>',
-                    form_prompt_not                  : '<?= __('{name} cannot be set to "{ruleValue}"') ?>',
-                    form_prompt_notExactly           : '<?= __('{name} cannot be set to exactly "{ruleValue}"') ?>',
-                    form_prompt_contain              : '<?= __('{name} cannot contain "{ruleValue}"') ?>',
-                    form_prompt_containExactly       : '<?= __('{name} cannot contain exactly "{ruleValue}"') ?>',
-                    form_prompt_doesntContain        : '<?= __('{name} must contain "{ruleValue}"') ?>',
-                    form_prompt_doesntContainExactly : '<?= __('{name} must contain exactly "{ruleValue}"') ?>',
-                    form_prompt_minLength            : '<?= __('{name} must be at least {ruleValue} characters') ?>',
-                    form_prompt_length               : '<?= __('{name} must be at least {ruleValue} characters') ?>',
-                    form_prompt_exactLength          : '<?= __('{name} must be exactly {ruleValue} characters') ?>',
-                    form_prompt_maxLength            : '<?= __('{name} cannot be longer than {ruleValue} characters') ?>',
-                    form_prompt_match                : '<?= __('{name} must match {ruleValue} field') ?>',
-                    form_prompt_different            : '<?= __('{name} must have a different value than {ruleValue} field') ?>',
-                    form_prompt_creditCard           : '<?= __('{name} must be a valid credit card number') ?>',
-                    form_prompt_minCount             : '<?= __('{name} must have at least {ruleValue} choices') ?>',
-                    form_prompt_exactCount           : '<?= __('{name} must have exactly {ruleValue} choices') ?>',
-                    form_prompt_maxCount             : '<?= __('{name} must have {ruleValue} or less choices') ?>',
-
-                    calendar_today   : '<?= _x('Today', 'Calendar') ?>',
-                    calendar_now     : '<?= _x('Now', 'Calendar') ?>',
-                    calendar_am      : '<?= _x('AM', 'Calendar') ?>',
-                    calendar_pm      : '<?= _x('PM', 'Calendar') ?>',
-                    calendar_week_no : '<?= _x('Week', 'Calendar') ?>',
-
-                    button_wishlist_remember : '<?= __('Remember list') ?>',
-                    button_wishlist_forget   : '<?= __('Forget list') ?>',
-                };
-            </script>
-
-            <?php
-            /** jQuery */
-            $scriptjQuery         = 'node_modules/jquery/dist/jquery.min.js';
-            $scriptjQueryModified = filemtime($scriptjQuery);
-            ?>
-            <script defer src="/<?= $scriptjQuery ?>?m=<?= $scriptjQueryModified ?>"></script>
-            <?php
-
-            /** Fomantic */
-            $scriptFomantic         = 'semantic/dist/semantic.min.js';
-            $scriptFomanticModified = filemtime($scriptFomantic);
-            ?>
-            <script defer src="/<?= $scriptFomantic ?>?m=<?= $scriptFomanticModified ?>"></script>
-            <?php
-
-            /** Default */
-            $scriptDefault         = 'src/assets/js/default.js';
-            $scriptDefaultModified = filemtime($scriptDefault);
-            ?>
-            <script defer src="/<?= $scriptDefault ?>?m=<?= $scriptDefaultModified ?>"></script>
-            <?php
-
-            /** Page */
-            $scriptPage = 'src/assets/js/' . $this->name .  '.js';
-
-            if (file_exists($scriptPage)) {
-                $scriptPageModified = filemtime($scriptPage);
-
+            foreach ($this->scripts as $script_page) {
+                $hash = hash_file('crc32', $script_page);
                 ?>
-                <script defer src="/<?= $scriptPage ?>?m=<?= $scriptPageModified ?>"></script>
+                <script defer
+                        type="text/javascript"
+                        src="/<?= $script_page ?>?v=<?= $hash ?>">
+                </script>
                 <?php
             }
 
@@ -455,6 +381,29 @@ class Page
                     data-domain="<?= $_SERVER['HTTP_HOST'] ?>"
                     src="https://plausible.io/js/plausible.js">
             </script>
+            <?php
+
+            /** AdSense */
+            $wishthis_hosts = array(
+                'wishthis.localhost',
+                'wishthis.online',
+                'rc.wishthis.online',
+                'dev.wishthis.online',
+            );
+            $CrawlerDetect  = new \Jaybizzle\CrawlerDetect\CrawlerDetect();
+
+            if (
+                   in_array($_SERVER['HTTP_HOST'], $wishthis_hosts, true)
+                && (true === $user->advertisements || $CrawlerDetect->isCrawler())
+            ) {
+                ?>
+                <script async
+                        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7093703034691766"
+                        crossorigin="anonymous">
+                </script>
+                <?php
+            }
+            ?>
 
             <title><?= $this->title ?> - wishthis - <?= __('Make a wish') ?></title>
         </head>
@@ -552,7 +501,7 @@ class Page
                         'text' => __('Login'),
                         'url'  => Page::PAGE_LOGIN,
                         'icon' => 'sign in alternate',
-                    )
+                    ),
                 ),
             );
             $pages[$register] = array(
@@ -563,7 +512,7 @@ class Page
                         'text' => __('Register'),
                         'url'  => Page::PAGE_REGISTER,
                         'icon' => 'user plus alternate',
-                    )
+                    ),
                 ),
             );
         }
@@ -775,6 +724,42 @@ class Page
         ?>
         </div><!-- .pusher -->
 
+        <noscript>
+            <dialog open class="ui active dimmer">
+                <div class="ui modal">
+                    <div class="header">
+                        <?= __('JavaScript is disabled') ?>
+                    </div>
+                    <div class="scrolling content">
+                        <div class="description">
+                            <div class="ui header">
+                                <p>
+                                    <?php
+                                    printf(
+                                        /** TRANSLATORS: %s: the current year */
+                                        __('Welcome to the year %s'),
+                                        date('Y')
+                                    );
+                                    ?>
+                                </p>
+                            </div>
+
+                            <p><?= __('I get it, websites track your every move these days and companies keep coming up with more genius hacks to monetise you.') ?></p>
+                            <p><?= __('But the good news is, wishthis aims to be different. It aims to be transparent and let the user stay in control. Unlike many companies just making claims about being secure and protecting your privacy, wishthis is entirely open source, allowing anybody to simply look up what it does and if they are okay with it. For people who aren\'t familiar with my tech stack and aren\'t able to lookup and understand the wishthis source code: "trust me".') ?></p>
+
+                            <p><?= __('I\'m joking - please remain critical, especially for closed source and/or commercial software. At least you can ask somebody to validate the wishthis code for you! Do you have any questions? Message me! (see footer)') ?></p>
+
+                            <p><?= __('wishthis really needs JavaScript to work, please enable it.') ?></p>
+                        </div>
+                    </div>
+
+                    <form method="dialog" class="actions">
+                        <a class="ui primary button" href="/"><?= __('Reload page') ?></a>
+                        <button class="ui button"><?= __('Close') ?></button>
+                    </form>
+                </div>
+            </dialog>
+        </noscript>
         </body>
         </html>
         <?php

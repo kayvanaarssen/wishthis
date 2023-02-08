@@ -22,6 +22,8 @@ $page->navigation();
 
             <div class="four wide column">
                 <div class="ui vertical pointing fluid menu profile">
+                    <a class="item" data-tab="roadmap"><?= __('Roadmap') ?></a>
+                    <a class="item" data-tab="1-0-0"><?= __('1.0.0') ?></a>
                     <a class="item" data-tab="0-7-3"><?= __('0.7.3') ?></a>
                     <a class="item" data-tab="0-7-2"><?= __('0.7.2') ?></a>
                     <a class="item" data-tab="0-7-1"><?= __('0.7.1') ?></a>
@@ -51,25 +53,198 @@ $page->navigation();
             </div>
 
             <div class="twelve wide stretched column">
-                <div class="ui tab" data-tab="0-7-2">
+                <div class="ui tab" data-tab="roadmap">
+                    <div class="ui segment">
+                        <h2 class="ui header"><?= __('Roadmap') ?></h2>
+                        <p>
+                            <?php
+                                echo sprintf(
+                                    /** TRANSLATORS: %s: discussions */
+                                    __('If you would like to give feedback regarding the roadmap, please refer to the %s on GitHub, or chat on Matrix or Discord.'),
+                                    sprintf(
+                                        '<a href="https://github.com/grandeljay/wishthis/discussions" target="_blank">%s</a>',
+                                        __('discussions')
+                                    )
+                                );
+                                ?>
+                        </p>
+                        <ul>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Allow customising priority colours');
+                                ?>
+                                <a href="https://github.com/grandeljay/wishthis/issues/34" target="_blank">#34</a>
+                            </li>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Filter by price');
+                                ?>
+                                <a href="https://github.com/grandeljay/wishthis/issues/43" target="_blank">#43</a>
+                            </li>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Bookmarklets');
+                                ?>
+                                <a href="https://github.com/grandeljay/wishthis/issues/49" target="_blank">#49</a>
+                            </li>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Delete account option');
+                                ?>
+                                <a href="https://github.com/grandeljay/wishthis/issues/69" target="_blank">#69</a>
+                            </li>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Notifications for fulfilled wishes');
+                                ?>
+                            </li>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Verify wishes are still available when attempting to fulfil them. Alternatively, a heartbeat which checks if all the wishes are still unfulfilled.');
+                                ?>
+                            </li>
+                            <li>
+                                <?php
+                                    /** TRANSLATORS: Changelog: Roadmap */
+                                    echo __('Option to delete account');
+                                ?>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="ui tab" data-tab="1-0-0">
                     <div class="ui segments">
 
                         <div class="ui segment">
-                            <h2 class="ui header"><?= __('0.7.2') ?></h2>
+                            <h2 class="ui header"><?= __('1.0.0') ?></h2>
                         </div>
 
+                        <div class="ui segment">
+                            <h3 class="ui header"><?= __('Added') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Option to set currency');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/43" target="_blank">#43</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('A roadmap in the changelog');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Compact/list view for wishes');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Option to enable advertisements');
+                                    ?>
+                                </li>
+                            </ul>
+
+                            <h3 class="ui header"><?= __('Improved') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Improved */
+                                        echo __('Large parts of wishthis have been completely rewritten, such as the API and how pretty URLs work. The aim was to increase security and maintainability.');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Improved */
+                                        echo __('Changelog now automatically selects the current version, instead of the top most tab.');
+                                    ?>
+                                </li>
+                            </ul>
+
+                            <h3 class="ui header"><?= __('Changed') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo  __('Decreased wish height on mobile devices');
+                                    ?>
+                                </li>
+                            </ul>
+
+                            <h3 class="ui header"><?= __('Fixed') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo  __('Fix various wish UI bugs');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/48" target="_blank">#48</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo  __('Fix background and colour when opening the mobile menu');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo  __('Marking wish as fulfilled');
+                                    ?>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="ui tab" data-tab="0-7-3">
+                    <div class="ui segments">
+                        <div class="ui segment">
+                            <h2 class="ui header"><?= __('0.7.3') ?></h2>
+                        </div>
                         <div class="ui segment">
                             <h3 class="ui header"><?= __('Fixed') ?></h3>
                             <ul>
                                 <li>
                                     <?php
                                         /** TRANSLATORS: Changelog: Fixed */
-                                        echo  __('Fix fulfilled wishes showing atfer using filter');
+                                        echo  __('Fix fulfilled wishes disappearing for wishlist owner');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/58" target="_blank">#58</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui tab" data-tab="0-7-2">
+                    <div class="ui segments">
+                        <div class="ui segment">
+                            <h2 class="ui header"><?= __('0.7.2') ?></h2>
+                        </div>
+                        <div class="ui segment">
+                            <h3 class="ui header"><?= __('Fixed') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo  __('Fix fulfilled wishes showing after using filter');
                                     ?>
                                 </li>
                             </ul>
                         </div>
-
                     </div>
                 </div>
 

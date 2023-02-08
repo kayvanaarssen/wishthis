@@ -146,6 +146,9 @@ switch ($step) {
         /**
          * Users
          */
+        $currencyFormatter = new \NumberFormatter(DEFAULT_LOCALE, \NumberFormatter::CURRENCY);
+        $currencyISO       = $currencyFormatter->getSymbol(\NumberFormatter::INTL_CURRENCY_SYMBOL);
+
         $database->query('DROP TABLE IF EXISTS `users`;');
         $database->query(
             'CREATE TABLE `users` (
@@ -155,13 +158,15 @@ switch ($step) {
                 `password_reset_token`       VARCHAR(128) NULL     NULL,
                 `password_reset_valid_until` DATETIME     NOT NULL DEFAULT NOW(),
                 `last_login`                 DATETIME     NOT NULL DEFAULT NOW(),
-                `power`                      INT          NOT NULL DEFAULT 0,
+                `power`                      INT          NOT NULL DEFAULT 1,
                 `birthdate`                  DATE         NULL     DEFAULT NULL,
-                `locale`                     VARCHAR(5)   NOT NULL DEFAULT "' . DEFAULT_LOCALE . '",
+                `language`                   VARCHAR(5)   NOT NULL DEFAULT "' . DEFAULT_LOCALE . '",
+                `currency`                   VARCHAR(3)   NOT NULL DEFAULT "' . $currencyISO . '",
                 `name_first`                 VARCHAR(32)  NULL     DEFAULT NULL,
                 `name_last`                  VARCHAR(32)  NULL     DEFAULT NULL,
                 `name_nick`                  VARCHAR(32)  NULL     DEFAULT NULL,
                 `channel`                    VARCHAR(24)  NULL     DEFAULT NULL,
+                `advertisements`             TINYINT(1)   NOT NULL DEFAULT 0,
 
                 INDEX `idx_password` (`password`)
             );'
@@ -246,11 +251,12 @@ switch ($step) {
         );
 
         $database->query(
-            'INSERT INTO `options`
-            (`key`, `value`)
+            'INSERT INTO
+                `options` (`key`, `value`)
             VALUES
-            ("isInstalled", true),
-            ("version", "' . VERSION . '");'
+                ("isInstalled", true),
+                ("version", "' . VERSION . '")
+            ;'
         );
 
         /**
