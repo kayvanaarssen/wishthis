@@ -1,6 +1,5 @@
 :root {
     --lineHeight: 1.4285;
-    --wishPreviewHeight: min(30vh, 224px);
     --dimmerZIndex: 100;
 }
 
@@ -12,7 +11,8 @@ body {
     background-color: #f4f4f4;
 }
 @media (prefers-color-scheme: dark) {
-    body {
+    body,
+    body.pushable {
         color: #fff;
         background-color: #2c2c2c;
     }
@@ -25,6 +25,20 @@ svg {
 
 figure {
     margin: 0 0 1em;
+}
+
+/**
+ * Dialog
+ */
+dialog.ui.active.dimmer {
+    display: none;
+    position: fixed;
+}
+dialog[open].ui.active.dimmer {
+    display: flex;
+}
+dialog[open] > .ui.modal {
+    display: block;
 }
 
 /**
@@ -64,297 +78,34 @@ figure {
 }
 
 /**
- * Progress
+ * Wishlist Grid
  */
-.ui.progress.nolabel:last-child {
-    margin: 0;
-}
+@media (max-width: 767.98px) {
+    .ui.ui.ui.ui.stackable.grid.actions,
+    .ui.ui.ui.ui.stackable.grid.wishlist {
+        margin-left: -1rem !important;
+        margin-right: -1rem !important;
+    }
 
-/**
- * Wishlist Card
- */
-.wishlist .ui.card {
-    --padding: 0.91666667em;
-    --buttonsHeight: calc(1em + 1.50em + 0.78571429em * 2 - 3px);
-}
-.wishlist .ui.card:focus-within {
-    z-index: calc(var(--dimmerZIndex) + 2);
-}
+    .ui.ui.ui.ui.stackable.compact.grid.actions,
+    .ui.ui.ui.ui.stackable.compact.grid.wishlist {
+        margin-left: -0.5rem !important;
+        margin-right: -0.5rem !important;
+    }
 
-.wishlist .ui.fluid.card.stretch {
-    height: 100%;
-}
-
-/** Image */
-.wishlist .ui.card > .image > svg {
-    width: 100%;
-    height: var(--wishPreviewHeight);
-
-    color: #f0f0f0;
-    background-color: #f4f4f4;
-
-    box-sizing: border-box;
-    border-radius: inherit;
-}
-@media (prefers-color-scheme: dark) {
-    .wishlist .ui.card > .image > svg {
-        color: rgba(255, 255, 255, 0.6);
-        background-color: #222;
+    .wishlist-filter-wrapper {
+        margin-left: -1rem;
+        margin-right: -1rem;
     }
 }
 
-.wishlist .ui.card > .image > svg#no-image {
-    padding: 15% 10%;
-}
-@media (prefers-color-scheme: dark) {
-    .wishlist .ui.card > .image > svg#no-image {
-        color: rgba(255, 255, 255, 0.6);
-    }
-}
-
-@media (hover: hover) {
-    @media (prefers-reduced-motion: no-preference) {
-        .wishlist .ui.card > .image > svg {
-            transition:
-                0.2s linear height,
-                0.2s linear padding,
-                0.2s linear opacity;
-        }
-    }
-    .wishlist .ui.card:hover > .image > svg {
-        height: calc(1em + 3 * var(--padding) - 5px);
-        padding: 0 !important;
-        opacity: 0;
-    }
-}
-
-.wishlist .ui.card > .image > img.preview {
-    height: var(--wishPreviewHeight);
-
-    object-fit: cover;
-    object-position: 50%;
-    background-color: #fff;
-}
-
-@media (prefers-color-scheme: dark) {
-    .wishlist .ui.card > .image > img.preview {
-        filter: brightness(80%);
-        background-color: #111;
-    }
-}
-
-@media (hover: hover) {
-    @media (prefers-reduced-motion: no-preference) {
-        .wishlist .ui.card > .image > img.preview {
-            transition:
-                0.2s linear height,
-                0.2s linear opacity;
-        }
-    }
-
-    .wishlist .ui.card:hover > .image > img.preview {
-        height: calc(1em + 3 * var(--padding));
-    }
-}
-
-/** Provider */
-.wishlist .ui.card > .image,
-.wishlist .ui.card > .image > span.provider {
-    border-radius: .33333333rem .33333333rem 0 0;
-}
-
-.wishlist .ui.card > .image > img.favicon,
-.wishlist .ui.card > .image > span.provider {
-    position: absolute;
-    top: 0;
-}
-
-/** Favicon */
-.wishlist .ui.card > .image > img.favicon {
-    padding: calc(var(--padding) * 1.5) var(--padding);
-
-    height: 1.25em;
-    width: auto;
-
-    box-sizing: content-box;
-    z-index: 1;
-}
-
-@media (prefers-color-scheme: dark) {
-    .wishlist .ui.card > .image > img.favicon {
-        filter: brightness(80%);
-    }
-}
-
-.wishlist .ui.card > .image > img.favicon + span.provider {
-    padding-left: 3em;
-}
-
-/** Provider name */
-.wishlist .ui.card > .image > span.provider {
-    display: block;
-    width: 100%;
-    padding: calc(var(--padding) * 1.5) var(--padding);
-
-    line-height: 1;
-    user-select: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    background-color: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(4px);
-}
-
-@media (prefers-color-scheme: dark) {
-    .wishlist .ui.card > .image > span.provider {
-        background-color: rgba(0, 0, 0, 0.6);
-    }
-}
-
-@supports (backdrop-filter: blur(4px)) {
-    .wishlist .ui.card > .image > span.provider {
-        background-color: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(4px);
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .wishlist .ui.card > .image > span.provider {
-            background-color: rgba(0, 0, 0, 0.2);
-        }
-    }
-}
-
-@media (hover: hover) {
-    .wishlist .ui.card > .image > span.provider {
-        position: absolute;
-
-        opacity: 0;
-    }
-
-    @media (prefers-reduced-motion: no-preference) {
-        .wishlist .ui.card > .image > span.provider {
-            transition: opacity 0.2s linear;
-        }
-    }
-
-    .wishlist .ui.card:hover > .image > span.provider {
-        display: block;
-
-        opacity: 1;
-    }
-}
-
-/** Content */
-.wishlist .ui.card > .content:not(.extra) {
-    height: calc(0.75 * var(--wishPreviewHeight));
-
-    overflow: auto;
-}
-
-@media (hover: hover) {
-    @media (prefers-reduced-motion: no-preference) {
-        .wishlist .ui.card > .content:not(.extra) {
-            transition:
-                0.2s linear height,
-                0.2s linear margin-bottom;
-        }
-    }
-
-    .wishlist .ui.card > .content:not(.extra) {
-        overflow: hidden;
-    }
-
-    .wishlist .ui.card:hover > .content:not(.extra) {
-        height: calc(1.5 * var(--wishPreviewHeight) - var(--buttonsHeight) - 4px);
-        margin-bottom: var(--buttonsHeight);
-
-        overflow: auto;
-    }
-}
-
-.wishlist .ui.card > .content > .header {
-    max-height: calc(2 * 1.28571429em);
-    overflow: hidden;
-}
-
-.wishlist .ui.card > .content > .description-fade {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-
-    height: 4em;
-    width: 100%;
-    background-image: linear-gradient(0deg, rgba(255, 255, 255, 1) 0.75em, rgba(255, 255, 255, 0.9) 45%, rgba(255, 255, 255, 0) 100%);
-    border-radius: 0.33333333rem;
-}
-
-@media (prefers-color-scheme: dark) {
-    .wishlist .ui.card > .content > .description-fade {
-        background-image: linear-gradient(0deg, rgba(0, 0, 0, 1) 0.75em, rgba(0, 0, 0, 0.9) 45%, rgba(0, 0, 0, 0) 100%);
-    }
-}
-
-/** Buttons */
-.wishlist .ui.card > .extra.buttons {
-    display: flex;
-    align-items: center;
-
-    background-color: inherit;
-    z-index: 2;
-}
-
-@media (hover: hover) {
-    @media (prefers-reduced-motion: no-preference) {
-        .wishlist .ui.card > .content > .description-fade {
-            transition: 0.2s ease bottom;
-        }
-    }
-    .wishlist .ui.card:hover > .content > .description-fade {
-        bottom: var(--buttonsHeight);
-    }
-
-    .wishlist .ui.card > .extra.buttons {
-        position: absolute;
-        top: unset;
-        right: 0;
-        bottom: calc(var(--buttonsHeight) / 2);
-        left: 0;
-        height: auto;
-
-        opacity: 0;
-        margin-bottom: 0;
-    }
-    @media (prefers-reduced-motion: no-preference) {
-        .wishlist .ui.card > .extra.buttons {
-            transition:
-                0.2s ease opacity,
-                0.2s ease bottom;
-        }
-    }
-    .wishlist .ui.card:hover > .extra.buttons {
-        opacity: 1;
-
-        bottom: 0;
-    }
-}
-
-.wishlist .ui.card > .extra.buttons > .button {
-    flex: 1 1 auto;
-}
-
-.wishlist .ui.card > .extra.buttons > :last-child {
-    margin-right: 0;
+.ui.one.column.grid > .column:not(.row, :first-of-type) {
+    padding-top: 0;
 }
 
 /**
  * Label
  */
-.ui.label {
-    z-index: calc(var(--dimmerZIndex) + 1);
-}
-
 p .ui.horizontal.label {
     margin: 0;
     cursor: default;
@@ -368,15 +119,29 @@ p .ui.horizontal.label {
     display: flex;
     flex-flow: row wrap;
 }
+.flex.wishlist-filter {
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
 
 @media (max-width: 767px) {
     .flex {
         flex-direction: column;
     }
+    .flex.wishlist-filter {
+        flex-direction: row;
+    }
 
     .flex > *,
     .flex > .ui.button {
         margin-bottom: 0.5rem;
+    }
+    .flex.wishlist-filter > div {
+        flex: 1 1 auto;
+        margin: 0;
+    }
+    .flex.wishlist-filter > div > div {
+        width: 100%;
     }
 
     .flex :last-child {
@@ -451,7 +216,8 @@ body.pushable > .pusher {
 /**
  * Options
  */
-.ui.dropdown.options {
+.ui.dropdown.wishlist-options,
+.ui.dropdown.wish-options {
     text-align: center;
 }
 
@@ -485,4 +251,32 @@ button.item {
     width: 100%;
 
     background-color: transparent;
+}
+
+/**
+ * Wishlists
+ */
+.ui.selection.dropdown.wishlists.active,
+.ui.selection.dropdown.wishlists.visible {
+    z-index: calc(var(--dimmerZIndex) + 2);
+}
+
+/**
+ * Messages
+ */
+.ui.message.reduce-data {
+    display: none;
+}
+@media (prefers-reduced-data: reduce) {
+    .ui.message.reduce-data {
+        display: flex;
+    }
+}
+
+/**
+ * Icons
+ */
+i.small.small.small.icon,
+i.small.small.small.icons {
+    vertical-align: baseline;
 }

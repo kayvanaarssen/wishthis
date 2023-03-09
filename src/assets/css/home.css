@@ -1,9 +1,11 @@
 /**
  * Actions
  */
-.ui.ui.ui.ui.stackable.grid.actions {
-    margin-left: -1rem !important;
-    margin-right: -1rem !important;
+@media (min-width: 768) {
+    .ui.ui.ui.ui.stackable.grid.actions {
+        margin-left: -1rem !important;
+        margin-right: -1rem !important;
+    }
 }
 @media (max-width: 991.9px) {
     .ui.grid.actions > .column:not(.row) {
@@ -28,6 +30,18 @@
     .ui.grid.actions > .column:not(.row):last-child {
         padding-right: 1rem;
     }
+}
+
+/**
+ * Why wishthis
+ */
+.flex.why-wishthis {
+    --gap: 0.5rem;
+
+    gap: var(--gap);
+}
+.flex.why-wishthis > ul {
+    flex: 0 0 calc(50% - var(--gap) / 2);
 }
 
 /**

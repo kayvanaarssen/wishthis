@@ -8,12 +8,12 @@
 
 namespace wishthis;
 
-$api      = true;
-$response = array();
+global $page, $database;
 
-ob_start();
-
-require '../../index.php';
+if (!isset($page)) {
+    http_response_code(403);
+    die('Direct access to this location is not allowed.');
+}
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
@@ -28,13 +28,29 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 $response['data'] = array();
 
                 foreach ($tables as $table) {
+                    /** Get count */
                     $count = new Cache\Query(
                         'SELECT COUNT(`id`) AS "count"
                            FROM `' . $table . '`;',
+                        array(),
                         Duration::DAY
                     );
 
                     $response['data'][$table] = $count->get();
+
+                    /** Get last modified */
+                    $user_time_zome = new \IntlDateFormatter(
+                        $_SESSION['user']->getLocale()
+                    );
+                    $user_time_zome = $user_time_zome->getTimeZoneId();
+
+                    $datetimeFormatter            = new \IntlDateFormatter(
+                        $_SESSION['user']->getLocale(),
+                        \IntlDateFormatter::RELATIVE_FULL,
+                        \IntlDateFormatter::SHORT,
+                        $user_time_zome
+                    );
+                    $response['data']['modified'] = $datetimeFormatter->format($count->getLastModified());
                 }
             } else {
                 $table = Sanitiser::getTable($_GET['table']);
@@ -51,9 +67,3 @@ switch ($_SERVER['REQUEST_METHOD']) {
         }
         break;
 }
-
-$response['warning'] = ob_get_clean();
-
-header('Content-type: application/json; charset=utf-8');
-echo json_encode($response);
-die();

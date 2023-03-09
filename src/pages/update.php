@@ -44,6 +44,9 @@ if ('POST' === $_SERVER['REQUEST_METHOD']) {
     $options->setOption('version', VERSION);
     $options->setOption('updateAvailable', false);
 
+    /** Update service-worker.js */
+    require ROOT . '/src/assets/js/service-worker.js.php';
+
     $page->messages[] = Page::success(
         sprintf(
             __('Database successfully migrated to %s.'),
@@ -63,20 +66,22 @@ $page->navigation();
 
         <?= $page->messages() ?>
 
-        <div class="ui segment">
-            <h2 class="ui header"><?= __('Database migration') ?></h2>
-            <p><?= __('Thank you for updating wishthis! To complete this update, some changes are required to the database structure.') ?></p>
+        <?php if (-1 === version_compare($options->version, VERSION)) { ?>
+            <div class="ui segment">
+                <h2 class="ui header"><?= __('Database migration') ?></h2>
+                <p><?= __('Thank you for updating wishthis! To complete this update, some changes are required to the database structure.') ?></p>
 
-            <form class="ui form" method="POST">
-                <button class="ui orange button"
-                        type="submit"
-                        title="<?= sprintf(__('Migrate to %s'), 'v' . VERSION) ?>"
-                >
-                    <i class="upload icon"></i>
-                    <?= sprintf(__('Migrate to %s'), 'v' . VERSION) ?>
-                </button>
-            </form>
-        </div>
+                <form class="ui form" method="POST">
+                    <button class="ui orange button"
+                            type="submit"
+                            title="<?= sprintf(__('Migrate to %s'), 'v' . VERSION) ?>"
+                    >
+                        <i class="upload icon"></i>
+                        <?= sprintf(__('Migrate to %s'), 'v' . VERSION) ?>
+                    </button>
+                </form>
+            </div>
+        <?php } ?>
     </div>
 </main>
 

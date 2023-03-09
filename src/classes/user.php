@@ -23,7 +23,10 @@ class User
         ->query(
             'SELECT *
                FROM `users`
-              WHERE `id` = ' . $user_id
+              WHERE `id` = :user_id',
+            array(
+                'user_id' => $user_id,
+            )
         );
 
         if (false !== $userQuery) {
@@ -44,13 +47,15 @@ class User
     /**
      * Private
      */
-    private string $locale;
+    private string $language;
+    private string $currency;
 
     /**
      * Non-Static
      */
     public int $power                           = 0;
     public ?\Gettext\Translations $translations = null;
+    public bool $advertisements                 = false;
 
     public function __construct(array $fields = array())
     {
@@ -60,12 +65,12 @@ class User
             }
         }
 
-        /** Set Locale */
-        if (!isset($this->locale)) {
-            $this->locale = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? \Locale::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE']) : DEFAULT_LOCALE;
+        /** Set Language */
+        if (!isset($this->language)) {
+            $this->language = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? \Locale::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE']) : DEFAULT_LOCALE;
         }
 
-        $this->setLocale($this->locale);
+        $this->setLocale($this->language);
     }
 
     /**
@@ -83,15 +88,34 @@ class User
         if (file_exists($translationFilepath)) {
             $loader             = new \Gettext\Loader\PoLoader();
             $this->translations = $loader->loadFile($translationFilepath);
+        } else {
+            trigger_error('Unable to find translations for ' . $locale . ', defaulting to ' . DEFAULT_LOCALE . '.', E_USER_NOTICE);
         }
 
         /** Set locale */
-        $this->locale = $locale;
+        $this->language = $locale;
     }
 
     public function getLocale(): string
     {
-        return $this->locale;
+        return $this->language ?? DEFAULT_LOCALE;
+    }
+
+    /**
+     * Set the user currency
+     *
+     * @param string $locale
+     *
+     * @return void
+     */
+    public function setCurrency(string $locale): void
+    {
+        $this->currency = $locale;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
     }
 
     /**
@@ -115,9 +139,14 @@ class User
         global $database;
 
         $wishlists = $database
-        ->query('SELECT *
-                   FROM `wishlists`
-                  WHERE `user` = ' . $this->id . ';')
+        ->query(
+            'SELECT *
+               FROM `wishlists`
+              WHERE `user` = :user_id;',
+            array(
+                'user_id' => $this->id,
+            )
+        )
         ->fetchAll();
 
         return $wishlists;
@@ -134,12 +163,17 @@ class User
         }
 
         $result = $database
-        ->query('SELECT `ws`.`wishlist`,
-                        `w`.`user`,
-                        `w`.`hash`
-                   FROM `wishlists_saved` `ws`
-                   JOIN `wishlists`       `w`  ON `w`.`id` = `ws`.`wishlist`
-                  WHERE `ws`.`user` = ' . $this->id . ';')
+        ->query(
+            'SELECT `ws`.`wishlist`,
+                    `w`.`user`,
+                    `w`.`hash`
+               FROM `wishlists_saved` `ws`
+               JOIN `wishlists`       `w`  ON `w`.`id` = `ws`.`wishlist`
+              WHERE `ws`.`user` = :user_id;',
+            array(
+                'user_id' => $this->id,
+            )
+        )
         ->fetchAll();
 
         if ($result) {
@@ -165,7 +199,10 @@ class User
             $persistent = $database
             ->query(
                 'DELETE FROM `sessions`
-                       WHERE `session` = "' . $_COOKIE[COOKIE_PERSISTENT] . '";'
+                       WHERE `session` = :session;',
+                array(
+                    'session' => $_COOKIE[COOKIE_PERSISTENT],
+                )
             );
         }
 

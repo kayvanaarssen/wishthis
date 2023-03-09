@@ -43,9 +43,12 @@ $page->navigation();
                                      FROM `wishes`
                                      JOIN `wishlists` ON `wishes`.`wishlist` = `wishlists`.`id`
                                      JOIN `users`     ON `wishlists`.`user`  = `users`.`id`
-                                    WHERE `users`.`id` = ' . $_SESSION['user']->id . '
+                                    WHERE `users`.`id` = :user_id
                                  ORDER BY `wishes`.`edited` DESC
-                                    LIMIT 1;'
+                                    LIMIT 1;',
+                                array(
+                                    'user_id' => $_SESSION['user']->id,
+                                )
                             );
 
                             if (false !== $lastWishlistQuery && 1 === $lastWishlistQuery->rowCount()) {
@@ -101,20 +104,37 @@ $page->navigation();
                     ) ?></p>
 
                     <p><?= __('As a non-commercial project it remains') ?></p>
-                    <ul class="ui list">
-                        <li class="item">
-                            <i class="green check icon" aria-hidden="true"></i>
-                            <div class="content"><?= __('free of advertisements,') ?></div>
-                        </li>
-                        <li class="item">
-                            <i class="green check icon" aria-hidden="true"></i>
-                            <div class="content"><?= __('without tracking, and') ?></div>
-                        </li>
-                        <li class="item">
-                            <i class="green check icon" aria-hidden="true"></i>
-                            <div class="content"><?= __('open for feedback and suggestions.') ?></div>
-                        </li>
-                    </ul>
+                    <div class="flex why-wishthis">
+                        <ul class="ui list">
+                            <li class="item" data-content="<?= __('unless you want them') ?>">
+                                <i class="green check icon" aria-hidden="true"></i>
+                                <div class="content"><?= __('free of advertisements') ?></div>
+                            </li>
+                            <?php
+                            $popup_html = sprintf(
+                                /** TRANSLATORS: %s: plausible */
+                                __('see %s'),
+                                '<a href=\'https://plausible.io\' target=\'_blank\'>' . __('plausible') . ' <i class=\'external alternate icon\'></i></a>'
+                            );
+                            ?>
+                            <li class="item" data-html="<?= $popup_html ?>">
+                                <i class="green check icon" aria-hidden="true"></i>
+                                <div class="content">
+                                    <?= __('without intrusive tracking') ?>
+                                </div>
+                            </li>
+                        </ul>
+                        <ul class="ui list">
+                            <li class="item">
+                                <i class="green check icon" aria-hidden="true"></i>
+                                <div class="content"><?= __('privacy focused') ?></div>
+                            </li>
+                            <li class="item">
+                                <i class="green check icon" aria-hidden="true"></i>
+                                <div class="content"><?= __('open for feedback and suggestions') ?></div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="ui segment">
@@ -170,7 +190,6 @@ $page->navigation();
                     <p><?= __('Join the others and get started now!') ?></p>
 
                     <div class="ui stackable statistics">
-
                         <div class="statistic" id="wishes">
                             <div class="value"><?= __('N. A.') ?></div>
                             <div class="label"><?= __('Wishes') ?></div>
@@ -188,6 +207,51 @@ $page->navigation();
                     </div>
                 </div>
 
+                <?php
+                $locale_browser = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? \Locale::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE']) : DEFAULT_LOCALE;
+                $locale_user    = $_SESSION['user']->getLocale();
+
+                if ($_SESSION['user']->isLoggedIn() && $locale_browser !== $locale_user && in_array($locale_browser, $locales, true)) {
+                    ?>
+                    <div class="ui segment">
+                        <h2 class="ui header"><?= __('Hey, you') ?></h2>
+
+                        <p>
+                            <?php
+                            printf(
+                                /** TRANSLATORS: %s: the users display name */
+                                __('Yes, I mean you, %s.'),
+                                $_SESSION['user']->getDisplayName()
+                            );
+                            ?>
+                        </p>
+
+                        <p>
+                            <?php
+                            printf(
+                                /** TRANSLATORS: %1$s: Locale, e. g. German (Germany), %2$s: Locale, e. g. English (United Kingdom) %3$s: preferences */
+                                __('Your browser is telling me that you would like to view pages in %1$s, but your %3$s are set to %2$s.'),
+                                '<strong>' . \Locale::getDisplayName($locale_browser, $locale_user) . '</strong>',
+                                '<strong>' . \Locale::getDisplayName($locale_user, $locale_user) . '</strong>',
+                                '<a href="' . PAGE::PAGE_PROFILE . '">' . __('preferences') . '</a>'
+                            );
+                            ?>
+                        </p>
+
+                        <p>
+                            <?php
+                            printf(
+                                /** TRANSLATORS: %s: the users display name */
+                                __('wishthis is available in %1$s different locales and also supports %2$s!'),
+                                '<strong>' . count($locales) . '</strong>',
+                                '<strong>' . \Locale::getDisplayName($locale_browser, $locale_user) . '</strong>'
+                            );
+                            ?>
+                        </p>
+                    </div>
+                    <?php
+                }
+                ?>
             </div>
         </div>
     </div>

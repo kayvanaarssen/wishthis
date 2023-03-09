@@ -8,10 +8,7 @@ class ComposerStaticInit5f3db9fc1d0cf1dd6a77a1d84501b4b1
 {
     public static $files = array (
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
-        'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
-        '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
-        '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         '09fc349b549513bf7f4291502426f919' => __DIR__ . '/..' . '/embed/embed/src/functions.php',
     );
 
@@ -19,11 +16,11 @@ class ComposerStaticInit5f3db9fc1d0cf1dd6a77a1d84501b4b1
         'S' => 
         array (
             'Symfony\\Polyfill\\Php80\\' => 23,
-            'Symfony\\Component\\Process\\' => 26,
+            'Slim\\Psr7\\' => 10,
         ),
         'Q' => 
         array (
-            'Qferrer\\' => 8,
+            'Qferrer\\Mjml\\' => 13,
         ),
         'P' => 
         array (
@@ -34,18 +31,23 @@ class ComposerStaticInit5f3db9fc1d0cf1dd6a77a1d84501b4b1
         array (
             'ML\\JsonLD\\' => 10,
         ),
+        'J' => 
+        array (
+            'Jaybizzle\\CrawlerDetect\\' => 24,
+        ),
         'H' => 
         array (
             'HtmlParser\\' => 11,
         ),
         'G' => 
         array (
-            'GuzzleHttp\\Psr7\\' => 16,
-            'GuzzleHttp\\Promise\\' => 19,
-            'GuzzleHttp\\' => 11,
             'Grandel\\' => 8,
             'Gettext\\Languages\\' => 18,
             'Gettext\\' => 8,
+        ),
+        'F' => 
+        array (
+            'Fig\\Http\\Message\\' => 17,
         ),
         'E' => 
         array (
@@ -62,11 +64,11 @@ class ComposerStaticInit5f3db9fc1d0cf1dd6a77a1d84501b4b1
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
         ),
-        'Symfony\\Component\\Process\\' => 
+        'Slim\\Psr7\\' => 
         array (
-            0 => __DIR__ . '/..' . '/symfony/process',
+            0 => __DIR__ . '/..' . '/slim/psr7/src',
         ),
-        'Qferrer\\' => 
+        'Qferrer\\Mjml\\' => 
         array (
             0 => __DIR__ . '/..' . '/qferr/mjml-php/src',
         ),
@@ -83,21 +85,13 @@ class ComposerStaticInit5f3db9fc1d0cf1dd6a77a1d84501b4b1
         array (
             0 => __DIR__ . '/..' . '/ml/json-ld',
         ),
+        'Jaybizzle\\CrawlerDetect\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jaybizzle/crawler-detect/src',
+        ),
         'HtmlParser\\' => 
         array (
             0 => __DIR__ . '/..' . '/oscarotero/html-parser/src',
-        ),
-        'GuzzleHttp\\Psr7\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
-        ),
-        'GuzzleHttp\\Promise\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/promises/src',
-        ),
-        'GuzzleHttp\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
         ),
         'Grandel\\' => 
         array (
@@ -111,6 +105,10 @@ class ComposerStaticInit5f3db9fc1d0cf1dd6a77a1d84501b4b1
         array (
             0 => __DIR__ . '/..' . '/gettext/gettext/src',
             1 => __DIR__ . '/..' . '/gettext/translator/src',
+        ),
+        'Fig\\Http\\Message\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/fig/http-message-util/src',
         ),
         'Embed\\' => 
         array (

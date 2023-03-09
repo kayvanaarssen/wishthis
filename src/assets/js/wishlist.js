@@ -14,11 +14,11 @@ $(function() {
             closable: false,
             actions : [
                 {
-                    text : text.modal_wishlist_warning_approve,
+                    text : wishthis.strings.modal.wishlist.warning.approve,
                     class: 'approve primary'
                 },
                 {
-                    text : text.modal_wishlist_warning_deny,
+                    text : wishthis.strings.modal.wishlist.warning.deny,
                     class: 'deny'
                 }
             ],
@@ -29,6 +29,18 @@ $(function() {
             onDeny: function() {
                 $('.wishlist-own').slideUp();
             }
+        });
+    }
+
+    /**
+     * Get wishlist by hash
+     */
+    if (!wishlist && wishthis.$_GET.hash) {
+        fetch('/api/wishlists/' + wishthis.$_GET.hash, { method: 'GET' })
+        .then(handleFetchError)
+        .then(handleFetchResponse)
+        .then(function(response) {
+           wishlist = response.results;
         });
     }
 
@@ -47,8 +59,8 @@ $(function() {
             action    : 'update wish status',
             method    : 'PUT',
             data      : {
-                wish_id     : card.attr('data-id'),
-                wish_status : wish_status_temporary,
+                'wish_id'     : card.attr('data-id'),
+                'wish_status' : wishthis.wish.status.temporary,
             },
             on        : 'now',
             onSuccess : function(response, element, xhr) {
@@ -66,8 +78,8 @@ $(function() {
             action    : 'update wish status',
             method    : 'PUT',
             data      : {
-                wish_id     : card.attr('data-id'),
-                wish_status : wish_status_unavailable,
+                'wish_id'     : card.attr('data-id'),
+                'wish_status' : wishthis.wish.status.unavailable,
             },
             on        : 'now',
             onSuccess : function(response, element, xhr) {
@@ -84,10 +96,13 @@ $(function() {
 
         buttonSave.addClass('disabled loading');
 
-        var formData = new URLSearchParams();
-        formData.append('wishlist', $('[data-wishlist]').attr('data-wishlist'));
+        var formData = new URLSearchParams(
+            {
+                'wishlist' : $('[data-wishlist]').attr('data-wishlist'),
+            }
+        );
 
-        fetch('/src/api/wishlists-saved.php', {
+        fetch('/api/wishlists-saved', {
             method : 'POST',
             body   : formData
         })
@@ -110,7 +125,7 @@ $(function() {
     });
 
     /** Determine if list is saved */
-    fetch('/src/api/wishlists-saved.php', {
+    fetch('/api/wishlists-saved', {
         method : 'GET',
     })
     .then(handleFetchError)
@@ -120,7 +135,7 @@ $(function() {
         var buttonSave = $('.button.save');
 
         wishlists.forEach(wishlist => {
-            if (wishlist.hash == $_GET.hash) {
+            if (wishlist.hash == wishthis.$_GET.hash) {
                 button_set_saved_state(buttonSave);
                 return;
             }
@@ -132,13 +147,13 @@ $(function() {
     /** Set default state */
     function button_set_default_state(buttonSave) {
         buttonSave.find('.icon').removeClass('red');
-        buttonSave.find('span').text(text.button_wishlist_remember);
+        buttonSave.find('span').text(wishthis.strings.button.wishlist.remember);
     }
 
     /** Set saved state */
     function button_set_saved_state(buttonSave) {
         buttonSave.find('.icon').addClass('red');
-        buttonSave.find('span').text(text.button_wishlist_forget);
+        buttonSave.find('span').text(wishthis.strings.button.wishlist.forget);
     }
 
     /**
@@ -149,14 +164,16 @@ $(function() {
         var wishlist_id     = $('.wishlist-cards[data-wishlist]').attr('data-wishlist');
         var wishlist_locale = buttonRequest.attr('data-locale');
 
-        var formData = new URLSearchParams({
-            'wishlist-id' : wishlist_id,
-            'locale'      : wishlist_locale
-        });
+        var formData = new URLSearchParams(
+            {
+                'locale'      : wishlist_locale,
+                'wishlist-id' : wishlist_id,
+            }
+        );
 
         buttonRequest.addClass('disabled loading');
 
-        fetch('/src/api/wishlists.php', {
+        fetch('/api/wishlists', {
             method : 'POST',
             body   : formData
         })

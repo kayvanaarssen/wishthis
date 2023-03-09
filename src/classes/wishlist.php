@@ -23,8 +23,7 @@ class Wishlist
         if (is_numeric($id_or_hash)) {
             $column = 'id';
         } elseif (is_string($id_or_hash)) {
-            $column     = 'hash';
-            $id_or_hash = '"' . $id_or_hash . '"';
+            $column = 'hash';
         }
 
         /**
@@ -34,7 +33,10 @@ class Wishlist
         ->query(
             'SELECT *
                FROM `wishlists`
-              WHERE `' . $column . '` = ' . $id_or_hash . ';'
+              WHERE `' . $column . '` = :id_or_hash;',
+            array(
+                'id_or_hash' => $id_or_hash,
+            )
         )
         ->fetch();
 
@@ -42,7 +44,11 @@ class Wishlist
             $this->exists = true;
 
             foreach ($columns as $key => $value) {
-                $this->$key = $value;
+                if ('string' === gettype($value)) {
+                    $this->$key = Sanitiser::render($value);
+                } else {
+                    $this->$key = $value;
+                }
             }
         } else {
             return;
@@ -51,21 +57,32 @@ class Wishlist
         /**
          * Get Wishes
          */
-        $this->wishes = $this->getWishes();
+        // $this->wishes = $this->getWishes();
     }
 
-    private function getWishes($sql = array()): array
+    public function getWishes(array $options = array('placeholders' => array())): array
     {
         global $database;
 
-        $SELECT    = isset($sql['SELECT'])    ? $sql['SELECT']    : Wish::SELECT;
-        $FROM      = isset($sql['FROM'])      ? $sql['FROM']      : Wish::FROM;
-        $LEFT_JOIN = isset($sql['LEFT_JOIN']) ? $sql['LEFT_JOIN'] : Wish::LEFT_JOIN;
-        $WHERE     = isset($sql['WHERE'])     ? $sql['WHERE']     : '`wishlist` = ' . $this->id;
-        $ORDER_BY  = isset($sql['ORDER_BY'])  ? $sql['ORDER_BY']  : '`priority` DESC, `url` ASC, `title` ASC';
+        if (!isset($options['WHERE'])) {
+            $options['placeholders']['wishlist_id'] = $this->id;
+        }
 
-        /** Determine if user owns the requested wish list */
-        $wish_status = ' AND (`status` IS NULL)';
+        $SELECT    = isset($options['SELECT'])    ? $options['SELECT']    : Wish::SELECT;
+        $FROM      = isset($options['FROM'])      ? $options['FROM']      : Wish::FROM;
+        $LEFT_JOIN = isset($options['LEFT_JOIN']) ? $options['LEFT_JOIN'] : Wish::LEFT_JOIN;
+        $WHERE     = isset($options['WHERE'])     ? $options['WHERE']     : '`wishlist` = :wishlist_id';
+        $ORDER_BY  = isset($options['ORDER_BY'])  ? $options['ORDER_BY']  : '`priority` DESC, `url` ASC, `title` ASC';
+
+        /** Default to showing available wishes */
+        $wish_status = ' AND (
+                `wishes`.`status` IS NULL
+            OR (
+                    `wishes`.`status` != "' . Wish::STATUS_UNAVAILABLE . '"
+                AND `wishes`.`status` != "' . Wish::STATUS_FULFILLED . '"
+                AND `wishes`.`status`  < unix_timestamp(CURRENT_TIMESTAMP - INTERVAL ' . Wish::STATUS_TEMPORARY_MINUTES . ' MINUTE)
+            )
+        )';
 
         if ($_SESSION['user']->isLoggedIn()) {
             $wishlist_ids = array_map(
@@ -75,8 +92,9 @@ class Wishlist
                 $_SESSION['user']->getWishlists()
             );
 
+            /** Show all wishes (except fulfilled) */
             if (in_array($this->id, $wishlist_ids, true)) {
-                $wish_status = '';
+                $wish_status = ' AND (`wishes`.`status` IS NULL OR `wishes`.`status` != "' . Wish::STATUS_FULFILLED . '")';
             }
         }
 
@@ -84,11 +102,12 @@ class Wishlist
 
         $this->wishes = $database
         ->query(
-            'SELECT ' . $SELECT . '
-               FROM ' . $FROM . '
-          LEFT JOIN ' . $LEFT_JOIN . '
-              WHERE ' . $WHERE . '
-           ORDER BY ' . $ORDER_BY . ';'
+            '  SELECT ' . $SELECT . '
+                FROM ' . $FROM . '
+            LEFT JOIN ' . $LEFT_JOIN . '
+                WHERE ' . $WHERE . '
+            ORDER BY ' . $ORDER_BY . ';',
+            $options['placeholders']
         )
         ->fetchAll();
 
@@ -99,7 +118,7 @@ class Wishlist
         return $this->wishes;
     }
 
-    public function getCards($options = array()): string
+    public function getCards(array $options = array('placeholders' => array())): string
     {
         ob_start();
 
@@ -110,24 +129,56 @@ class Wishlist
             $this->wishes = $this->getWishes($options);
         }
 
+        $style = isset($options['style']) ? $options['style'] : 'grid';
+
         /**
          * Cards
          */
-        ?>
-        <div class="ui three column doubling stackable grid wishlist">
-            <?php if (!empty($this->wishes)) { ?>
-                <?php foreach ($this->wishes as $wish) { ?>
-                    <div class="column">
-                        <?= $wish->getCard($this->user) ?>
-                    </div>
-                <?php } ?>
-            <?php } else { ?>
-                <div class="sixteen wide column">
-                    <?= Page::info(__('This wishlist seems to be empty.'), __('Empty')); ?>
+        switch ($style) {
+            case 'list':
+                ?>
+                <div class="ui one column doubling stackable compact grid wishlist">
+                    <?php if (!empty($this->wishes)) { ?>
+                        <?php foreach ($this->wishes as $wish) { ?>
+                            <div class="column">
+                                <?php
+                                $wish->style = $style;
+
+                                echo $wish->getCard($this->user);
+                                ?>
+                            </div>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <div class="sixteen wide column">
+                            <?= Page::info(__('This wishlist seems to be empty.'), __('Empty')); ?>
+                        </div>
+                    <?php } ?>
                 </div>
-            <?php } ?>
-        </div>
-        <?php
+                <?php
+                break;
+
+            default:
+                ?>
+                <div class="ui three column doubling stackable compact grid wishlist">
+                    <?php if (!empty($this->wishes)) { ?>
+                        <?php foreach ($this->wishes as $wish) { ?>
+                            <div class="column">
+                                <?php
+                                $wish->style = $style;
+
+                                echo $wish->getCard($this->user);
+                                ?>
+                            </div>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <div class="sixteen wide column">
+                            <?= Page::info(__('This wishlist seems to be empty.'), __('Empty')); ?>
+                        </div>
+                    <?php } ?>
+                </div>
+                <?php
+                break;
+        }
 
         $html = ob_get_clean();
 

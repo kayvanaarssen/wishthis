@@ -8,7 +8,7 @@
 
 namespace wishthis;
 
-define('VERSION', '0.7.3');
+define('VERSION', '1.0.0');
 define('ROOT', __DIR__);
 define('DEFAULT_LOCALE', 'en_GB');
 define('COOKIE_PERSISTENT', 'wishthis_persistent');
@@ -88,30 +88,26 @@ if (
 /**
  * Persistent (stay logged in)
  */
-if (isset($_COOKIE[COOKIE_PERSISTENT]) && $database) {
-    $table_sessions_exists = $database->tableExists('sessions');
-
-    if ($table_sessions_exists) {
-        $sessions = $database
-        ->query(
-            'SELECT *
-               FROM `sessions`
-              WHERE `session` = "' . $_COOKIE[COOKIE_PERSISTENT] . '";'
+if (isset($_COOKIE[COOKIE_PERSISTENT]) && $database && !$_SESSION['user']->isLoggedIn()) {
+    $sessions = $database
+    ->query(
+        'SELECT *
+           FROM `sessions`
+          WHERE `session` = :session;',
+        array(
+            'session' => $_COOKIE[COOKIE_PERSISTENT],
         )
-        ->fetchAll();
+    )
+    ->fetchAll();
 
-        if (false !== $sessions) {
-            $_SESSION['user'] = new User();
+    if (false !== $sessions) {
+        foreach ($sessions as $session) {
+            $expires = strtotime($session['expires']);
 
-            foreach ($sessions as $session) {
-                /** Column sessions.expires was added in v0.7.1. */
-                $expires = strtotime($session['expires'] ?? date('Y-m-d H:i:s', time() + 1));
+            if (time() < $expires) {
+                $_SESSION['user'] = User::getFromID($session['user']);
 
-                if (time() < $expires) {
-                    $_SESSION['user'] = User::getFromID($session['user']);
-
-                    break;
-                }
+                break;
             }
         }
     }
@@ -145,23 +141,9 @@ $locale = isset($_REQUEST['locale']) ? $_REQUEST['locale'] : \Locale::lookup($lo
 Wish::initialize();
 
 /**
- * API
- */
-if (isset($api)) {
-    return;
-}
-
-/**
  * Pretty URLs
  */
 $url = new URL($_SERVER['REQUEST_URI']);
-
-/**
- * Install
- */
-if (!$options || !$options->getOption('isInstalled')) {
-    $page = 'install';
-}
 
 /**
  * Database Update

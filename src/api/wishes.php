@@ -8,14 +8,12 @@
 
 namespace wishthis;
 
-$api      = true;
-$response = array(
-    'success' => false,
-);
+global $page, $database;
 
-ob_start();
-
-require '../../index.php';
+if (!isset($page)) {
+    http_response_code(403);
+    die('Direct access to this location is not allowed.');
+}
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
@@ -43,6 +41,40 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $response = array(
                 'info' => $info,
             );
+        } elseif (isset($_GET['wishlist_id'], $_GET['wishlist_style'], $_GET['wish_priority'])) {
+            /**
+             * Get wishes by priority
+             */
+            $wishlist                                 = new Wishlist($_GET['wishlist_id']);
+            $options                                  = array(
+                'style' => $_GET['wishlist_style'],
+            );
+            $where                                    = array(
+                'priority' => '`priority` = :wish_priority',
+            );
+            $options['placeholders']['wish_priority'] = $_GET['wish_priority'];
+
+            if (-1 === intval($_GET['wish_priority'])) {
+                unset($where['priority']);
+                unset($options['placeholders']['wish_priority']);
+            }
+
+            if (empty($_GET['wish_priority'])) {
+                $where['priority'] = '`priority` IS NULL';
+            }
+
+            $options['WHERE'] = '(' . implode(') AND (', $where) . ')';
+
+            $wishes = array_map(
+                function (Wish $wish) use ($wishlist) {
+                    $wish->card = $wish->getCard($wishlist->user);
+
+                    return $wish;
+                },
+                $wishlist->getWishes($options)
+            );
+
+            $response['results'] = $wishes;
         }
         break;
 
@@ -63,8 +95,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $wish_description    = Sanitiser::getText($_POST['wish_description']);
             $wish_image          = Sanitiser::getURL($_POST['wish_image']);
             $wish_url            = Sanitiser::getURL($_POST['wish_url']);
-            $wish_priority       = !empty(Sanitiser::getNumber($_POST['wish_priority'])) ? Sanitiser::getNumber($_POST['wish_priority']) : 'NULL';
-            $wish_is_purchasable = isset($_POST['wish_is_purchasable']) ? 'true' : 'false';
+            $wish_priority       = !empty($_POST['wish_priority']) ? Sanitiser::getNumber($_POST['wish_priority']) : null;
+            $wish_is_purchasable = isset($_POST['wish_is_purchasable']);
 
             if (Wish::NO_IMAGE === $wish_image) {
                 $wish_image = '';
@@ -104,29 +136,39 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 }
 
                 /** Update */
-                $wish_title       = empty($wish_title)                                   ? 'NULL' : '"' . substr($wish_title, 0, 128) . '"';
-                $wish_description = empty($wish_description)                             ? 'NULL' : '"' . $wish_description           . '"';
-                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? 'NULL' : '"' . $wish_image                 . '"';
-                $wish_url         = empty($wish_url)                                     ? 'NULL' : '"' . $wish_url                   . '"';
+                $wish_title       = empty($wish_title)                                   ? null : substr($wish_title, 0, 128);
+                $wish_description = empty($wish_description)                             ? null : $wish_description          ;
+                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? null : $wish_image                ;
+                $wish_url         = empty($wish_url)                                     ? null : $wish_url                  ;
 
                 $database
                 ->query(
                     'UPDATE `wishes`
-                        SET `wishlist`       = ' . $wish->wishlist      . ',
-                            `title`          = ' . $wish_title          . ',
-                            `description`    = ' . $wish_description    . ',
-                            `image`          = ' . $wish_image          . ',
-                            `url`            = ' . $wish_url            . ',
-                            `priority`       = ' . $wish_priority       . ',
-                            `is_purchasable` = ' . $wish_is_purchasable . '
-                      WHERE `id`             = ' . $wish->id            . ';'
+                        SET `wishlist`       = :wishlist_id,
+                            `title`          = :wish_title,
+                            `description`    = :wish_description,
+                            `image`          = :wish_image,
+                            `url`            = :wish_url,
+                            `priority`       = :wish_priority,
+                            `is_purchasable` = :wish_is_purchasable
+                      WHERE `id`             = :wish_id',
+                    array(
+                        'wishlist_id'         => $wish->wishlist,
+                        'wish_title'          => $wish_title,
+                        'wish_description'    => $wish_description,
+                        'wish_image'          => $wish_image,
+                        'wish_url'            => $wish_url,
+                        'wish_priority'       => $wish_priority,
+                        'wish_is_purchasable' => $wish_is_purchasable,
+                        'wish_id'             => $wish->id,
+                    )
                 );
 
                 /**
                  * Product
                  */
                 $wish_price = empty($_POST['wish_price']) || 'false' === $wish_is_purchasable
-                            ? 'NULL'
+                            ? null
                             : Sanitiser::getNumber($_POST['wish_price']);
 
                 $database
@@ -136,9 +178,13 @@ switch ($_SERVER['REQUEST_METHOD']) {
                         `wish`,
                         `price`
                     ) VALUES (
-                        ' . $wish->id   . ',
-                        ' . $wish_price . '
-                    );'
+                        :wish_id,
+                        :wish_price
+                    );',
+                    array(
+                        'wish_id'    => $wish->id,
+                        'wish_price' => $wish_price,
+                    )
                 );
 
                 $response['lastInsertId'] = $wish->id;
@@ -176,10 +222,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 }
 
                 /** Update */
-                $wish_title       = empty($wish_title)                                   ? 'NULL' : '"' . substr($wish_title, 0, 128) . '"';
-                $wish_description = empty($wish_description)                             ? 'NULL' : '"' . $wish_description           . '"';
-                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? 'NULL' : '"' . $wish_image                 . '"';
-                $wish_url         = empty($wish_url)                                     ? 'NULL' : '"' . $wish_url                   . '"';
+                $wish_title       = empty($wish_title)                                   ? null : substr($wish_title, 0, 128);
+                $wish_description = empty($wish_description)                             ? null : $wish_description          ;
+                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? null : $wish_image                ;
+                $wish_url         = empty($wish_url)                                     ? null : $wish_url                  ;
 
                 $database
                 ->query(
@@ -193,21 +239,30 @@ switch ($_SERVER['REQUEST_METHOD']) {
                         `priority`,
                         `is_purchasable`
                     ) VALUES (
-                         ' . $wishlist_id         . ',
-                         ' . $wish_title          . ',
-                         ' . $wish_description    . ',
-                         ' . $wish_image          . ',
-                         ' . $wish_url            . ',
-                         ' . $wish_priority       . ',
-                         ' . $wish_is_purchasable . '
-                    );'
+                         :wishlist_id,
+                         :wish_title,
+                         :wish_description,
+                         :wish_image,
+                         :wish_url,
+                         :wish_priority,
+                         :wish_is_purchasable
+                    );',
+                    array(
+                        'wishlist_id'         => $wishlist_id,
+                        'wish_title'          => $wish_title,
+                        'wish_description'    => $wish_description,
+                        'wish_image'          => $wish_image,
+                        'wish_url'            => $wish_url,
+                        'wish_priority'       => $wish_priority,
+                        'wish_is_purchasable' => $wish_is_purchasable,
+                    )
                 );
 
                 /**
                  * Product
                  */
                 $wish_id    = $database->lastInsertId();
-                $wish_price = Sanitiser::getNumber($_POST['wish_price']);
+                $wish_price = !empty($_POST['wish_price']) ? Sanitiser::getNumber($_POST['wish_price']) : null;
 
                 if ($wish_price > 0) {
                     $database
@@ -217,9 +272,13 @@ switch ($_SERVER['REQUEST_METHOD']) {
                             `wish`,
                             `price`
                         ) VALUES (
-                            ' . $wish_id    . ',
-                            ' . $wish_price . '
-                        );'
+                            :wish_id,
+                            :wish_price
+                        );',
+                        array(
+                            'wish_id'    => $wish_id,
+                            'wish_price' => $wish_price,
+                        )
                     );
                 }
 
@@ -229,23 +288,27 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
 
     case 'PUT':
-        parse_str(file_get_contents("php://input"), $_PUT);
+        $_PUT = $this->input;
 
         if (isset($_PUT['wish_id'], $_PUT['wish_status'])) {
             /**
              * Update Wish Status
              */
-            $status  = Sanitiser::getStatus($_PUT['wish_status']);
-            $wish_id = Sanitiser::getNumber($_PUT['wish_id']);
+            $wish_status = Sanitiser::getStatus($_PUT['wish_status']);
+            $wish_id     = Sanitiser::getNumber($_PUT['wish_id']);
 
-            if (Wish::STATUS_TEMPORARY === $status) {
-                $status = time();
+            if (Wish::STATUS_TEMPORARY === $wish_status) {
+                $wish_status = time();
             }
 
             $database->query(
                 'UPDATE `wishes`
-                    SET `status` = "' . $status  . '"
-                  WHERE `id`     =  ' . $wish_id . ';'
+                    SET `status` = :wish_status
+                  WHERE `id`     = :wish_id',
+                array(
+                    'wish_status' => $wish_status,
+                    'wish_id'     => $wish_id,
+                )
             );
 
             $response['success'] = true;
@@ -255,8 +318,12 @@ switch ($_SERVER['REQUEST_METHOD']) {
              */
             $database->query(
                 'UPDATE `wishes`
-                    SET `url` = "' . Sanitiser::getURL($_PUT['wish_url_proposed']) . '"
-                  WHERE `url` = "' . Sanitiser::getURL($_PUT['wish_url_current']) . '";'
+                    SET `url` = :wish_url_proposed,
+                  WHERE `url` = :wish_url_current',
+                array(
+                    'wish_url_proposed' => Sanitiser::getURL($_PUT['wish_url_proposed']),
+                    'wish_url_current'  => Sanitiser::getURL($_PUT['wish_url_current']),
+                )
             );
 
             $response['success'] = true;
@@ -264,21 +331,19 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
 
     case 'DELETE':
-        parse_str(file_get_contents("php://input"), $_DELETE);
+        $_DELETE = $this->input;
 
         if (isset($_DELETE['wish_id'])) {
             $database->query(
                 'DELETE FROM `wishes`
-                       WHERE `id` = ' . Sanitiser::getNumber($_DELETE['wish_id']) . ';'
+                       WHERE `id` = :wish_id',
+                array(
+                    'wish_id' => Sanitiser::getNumber($_DELETE['wish_id']),
+                )
             );
+
+            $response['success'] = true;
         }
 
-        $response['success'] = true;
         break;
 }
-
-$response['warning'] = ob_get_clean();
-
-header('Content-type: application/json; charset=utf-8');
-echo json_encode($response);
-die();

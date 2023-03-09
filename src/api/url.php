@@ -8,29 +8,24 @@
 
 namespace wishthis;
 
-$api      = true;
-$response = array();
+global $page;
 
-ob_start();
-
-require '../../index.php';
+if (!isset($page)) {
+    http_response_code(403);
+    die('Direct access to this location is not allowed.');
+}
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         if (isset($_GET['url'])) {
-            $url = new URL(base64_decode($_GET['url']));
+            $url_old = base64_decode($_GET['url']);
+            $url     = new URL($url_old);
 
             $response['data'] = array(
-                'url'            => $url->getPretty(),
-                'url_old'        => $url->url,
-                'url_old_pretty' => $url->isPretty(),
+                'url'           => $url_old,
+                'url_pretty'    => $url->getPretty(),
+                'url_is_pretty' => $url->isPretty(),
             );
         }
         break;
 }
-
-$response['warning'] = ob_get_clean();
-
-header('Content-type: application/json; charset=utf-8');
-echo json_encode($response);
-die();

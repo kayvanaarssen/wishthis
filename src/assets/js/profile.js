@@ -1,6 +1,9 @@
 $(function() {
     $('.menu.profile .item').tab();
 
+    /**
+     * Personal
+     */
     $('.ui.calendar').calendar({
         type           : 'date',
         firstDayOfWeek : 1,
@@ -12,6 +15,10 @@ $(function() {
             'user-email' : 'email',
         }
     });
+
+    /**
+     * Password
+     */
     $('[data-tab="password"] .ui.form').form({
         fields: {
             'user-password'        : ['minLength[8]', 'empty'],
@@ -22,7 +29,7 @@ $(function() {
                 rules      : [
                     {
                         type   : 'match[user-password]',
-                        prompt : text.form_profile_password
+                        prompt : wishthis.strings.form.profile.password
                     }
                 ]
             }
@@ -62,17 +69,19 @@ $(function() {
         }
     });
 
-    $('.ui.progress').progress();
-
     /**
      * Preferences
      */
+    $('.ui.progress').progress();
 
-    /** Language */
-    $('.ui.dropdown.locale').dropdown({
-        sortSelect     : 'natural',
-        fullTextSearch : true,
-    });
+    /** Locale */
+    var dropdown_locale_settings = {
+        'sortSelect'     : 'natural',
+        'fullTextSearch' : true,
+    };
+
+    $('.ui.dropdown.language').dropdown(dropdown_locale_settings);
+    $('.ui.dropdown.currency').dropdown(dropdown_locale_settings);
 
     /** Channel */
     $('.ui.dropdown.channel').dropdown();
@@ -92,4 +101,7 @@ $(function() {
             });
         }
     }
+
+    /** Advertisements */
+    $('.ui.checkbox.advertisements').checkbox();
 });
