@@ -32,26 +32,6 @@ $page->navigation();
                 </div>
             </div>
 
-            <div class="ui tab" data-tab="0-7-3">
-                <div class="ui segments">
-                    <div class="ui segment">
-                        <h2 class="ui header"><?= __('0.7.3') ?></h2>
-                    </div>
-                    <div class="ui segment">
-                        <h3 class="ui header"><?= __('Fixed') ?></h3>
-                        <ul>
-                            <li>
-                                <?php
-                                    /** TRANSLATORS: Changelog: Fixed */
-                                    echo  __('Fix fulfilled wishes disappearing for wishlist owner');
-                                ?>
-                                <a href="https://github.com/grandeljay/wishthis/issues/58" target="_blank">#58</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
             <div class="twelve wide stretched column">
                 <div class="ui tab" data-tab="roadmap">
                     <div class="ui segment">
