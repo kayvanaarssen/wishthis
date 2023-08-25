@@ -72,6 +72,10 @@ $(function () {
             'onHide' : function(modal) {
                 wish_unset();
             },
+            'onHidden' : function() {
+                $(this).modal('destroy');
+                $(this).remove();
+            }
         })
         .modal('show')
         .addClass(wish_details_size);
@@ -167,7 +171,7 @@ $(function () {
             'method' : 'PUT',
             'body'   : new URLSearchParams({
                 'wish_id'     : wish.id,
-                'wish_status' : wishthis.wish.status.fulfilled,
+                'wish_status' : wishthis.wish.status.unavailable,
             }),
         }
 
@@ -200,7 +204,7 @@ $(function () {
          * Initialise
          */
         /** Checkbox */
-        const checkbox_is_purchasable = wish_edit.find('.ui.checkbox.wish-is-purchasable');
+        var checkbox_is_purchasable = wish_edit.find('.ui.checkbox.wish-is-purchasable');
 
         checkbox_is_purchasable
         .checkbox({
@@ -224,19 +228,28 @@ $(function () {
         wish_edit
         .modal({
             'onApprove' : wishSave,
+            'onHidden'  : function() {
+                $(this).modal('destroy');
+                $(this).remove();
+            }
         })
         .modal('show')
         .addClass(wish_edit_size);
 
         /** Initialise Tabs */
         wish_edit.find('.item[data-tab]')
-        .tab();
+        .tab({
+            'context' : '.wishlist-wish-edit'
+        });
 
         /** General */
+        var decoded_title       = $('<div>').html(wish_local.title).text();
+        var decoded_description = $('<div>').html(wish_local.description).text();
+
         $('[name="wish_id"]').val(wish_local.id);
         $('[name="wishlist_id"]').val(wish_local.wishlist);
-        $('[name="wish_title"]').val(wish_local.title);
-        $('[name="wish_description"]').val(wish_local.description);
+        $('[name="wish_title"]').val(decoded_title);
+        $('[name="wish_description"]').val(decoded_description);
         $('[name="wish_image"]').val(wish_local.image);
         $('[name="wish_url"]').val(wish_local.url);
         $('.ui.selection.dropdown.priority').dropdown('set selected', wish_local.priority);
