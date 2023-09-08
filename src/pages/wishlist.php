@@ -8,8 +8,8 @@
 
 namespace wishthis;
 
-$wishlist                                  = new Wishlist($_GET['hash']);
-$wishlist_user                             = User::getFromID($wishlist->user);
+$wishlist                                  = Wishlist::getFromHash($_GET['hash']);
+$wishlist_user                             = User::getFromID($wishlist->getUserId());
 $page                                      = new Page(__FILE__, $wishlist->getTitle());
 $page->stylesheets['wish']                 = 'src/assets/css/wish.css';
 $page->stylesheets['wish-card']            = 'src/assets/css/wish-card.css';
@@ -17,13 +17,15 @@ $page->scripts['wish']                     = 'src/assets/js/parts/wish.js';
 $page->scripts['wishlist-filter-priority'] = 'src/assets/js/parts/wishlist-filter-priority.js';
 $page->scripts['wishlists']                = 'src/assets/js/parts/wishlists.js';
 
-if (!$wishlist->exists) {
+if (false === $wishlist) {
     $page->errorDocument(404, $wishlist);
 }
 
 $page->header();
 $page->bodyStart();
 $page->navigation();
+
+$user = User::getCurrent();
 ?>
 
 <main>
@@ -33,7 +35,7 @@ $page->navigation();
         <div class="ui stackable grid">
             <div class="column">
 
-                <?php if ($_SESSION['user']->isLoggedIn() && $_SESSION['user']->id !== $wishlist->user) { ?>
+                <?php if ($user->isLoggedIn() && $user->getId() !== $wishlist->getUserId()) { ?>
                     <button class="ui white small basic labeled icon button save disabled loading">
                         <i class="heart icon"></i>
                         <span><?= __('Remember list') ?></span>
@@ -47,7 +49,7 @@ $page->navigation();
         /**
          * Warn the wishlist creator
          */
-        if ($_SESSION['user']->isLoggedIn() && $_SESSION['user']->id === $wishlist->user) { ?>
+        if ($user->isLoggedIn() && $user->getId() === $wishlist->getUserId()) { ?>
             <div class="ui icon warning message wishlist-own">
                 <i class="exclamation triangle icon"></i>
                 <div class="content">

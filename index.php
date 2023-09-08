@@ -8,7 +8,7 @@
 
 namespace wishthis;
 
-define('VERSION', '1.0.0');
+define('VERSION', '1.1.0');
 define('ROOT', __DIR__);
 define('DEFAULT_LOCALE', 'en_GB');
 define('COOKIE_PERSISTENT', 'wishthis_persistent');
@@ -52,9 +52,7 @@ session_start(
     )
 );
 
-if (!isset($_SESSION['user'])) {
-    $_SESSION['user'] = new User();
-}
+$user = User::getCurrent();
 
 /**
  * Database
@@ -84,7 +82,7 @@ if (
 /**
  * Persistent (stay logged in)
  */
-if (isset($_COOKIE[COOKIE_PERSISTENT]) && $database && !$_SESSION['user']->isLoggedIn()) {
+if (isset($_COOKIE[COOKIE_PERSISTENT]) && $database && !$user->isLoggedIn()) {
     $sessions = $database
     ->query(
         'SELECT *
@@ -101,7 +99,7 @@ if (isset($_COOKIE[COOKIE_PERSISTENT]) && $database && !$_SESSION['user']->isLog
             $expires = strtotime($session['expires']);
 
             if (time() < $expires) {
-                $_SESSION['user'] = User::getFromID($session['user']);
+                $user = User::getFromID($session['user']);
 
                 break;
             }
@@ -129,7 +127,7 @@ $locales = array_filter(
     )
 );
 
-$locale = isset($_REQUEST['locale']) ? $_REQUEST['locale'] : \Locale::lookup($locales, $_SESSION['user']->getLocale(), false, 'en_GB');
+$locale = isset($_REQUEST['locale']) ? $_REQUEST['locale'] : \Locale::lookup($locales, $user->getLocale(), false, 'en_GB');
 
 /**
  * Wish

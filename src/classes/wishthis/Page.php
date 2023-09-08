@@ -114,8 +114,11 @@ class Page
     }
 
     /**
-     * Non-Static
+     * The page name. Is used for the HTML `title` and `h1` tags.
+     *
+     * @var string
      */
+    private string $name;
     public string $language = DEFAULT_LOCALE;
     public array $messages  = array();
     public string $link_preview;
@@ -150,7 +153,7 @@ class Page
         /**
          * Session
          */
-        $user = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
+        $user = User::getCurrent();
 
         /**
          * Login
@@ -166,7 +169,7 @@ class Page
         /**
          * Power
          */
-        if (isset($user->power) && $user->power < $this->power && 0 !== $this->power) {
+        if ($user->getPower() < $this->power && 0 !== $this->power) {
             redirect(Page::PAGE_POWER . '&required=' . $this->power);
         }
 
@@ -181,7 +184,7 @@ class Page
         );
 
         if ($options && $options->getOption('updateAvailable') && !in_array($this->name, $ignoreUpdateRedirect)) {
-            if (100 === $user->power) {
+            if (100 === $user->getPower()) {
                 redirect(Page::PAGE_UPDATE);
             } else {
                 redirect(Page::PAGE_MAINTENANCE);
@@ -276,7 +279,7 @@ class Page
     {
         global $locales;
 
-        $user = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
+        $user = User::getCurrent();
         ?>
         <!DOCTYPE html>
         <html lang="<?= $this->language ?>">
@@ -421,7 +424,7 @@ class Page
 
     public function navigation(): void
     {
-        $user = isset($_SESSION['user']->id) ? $_SESSION['user'] : new User();
+        $user = User::getCurrent();
 
         $wishlists = Navigation::Wishlists->value;
         $blog      = Navigation::Blog->value;
@@ -482,7 +485,7 @@ class Page
                 'url'  => Page::PAGE_PROFILE,
                 'icon' => 'user circle alternate',
             );
-            if (100 === $user->power) {
+            if (100 === $user->getPower()) {
                 $pages[$account]['items'][] = array(
                     'text' => __('Login as'),
                     'url'  => Page::PAGE_LOGIN_AS,
@@ -519,7 +522,7 @@ class Page
             );
         }
 
-        if (isset($user->power) && 100 === $user->power) {
+        if (100 === $user->getPower()) {
             $pages[$system]['items'][] = array(
                 'text' => __('Settings'),
                 'url'  => Page::PAGE_SETTINGS,

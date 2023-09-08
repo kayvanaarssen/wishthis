@@ -18,7 +18,7 @@ wishthis is a simple, intuitive and modern wishlist platform to create, manage a
 ## :heavy_check_mark: Requirements
 
 -   Apache or Nginx
--   PHP 8.1
+-   PHP 8.1 - PHP 8.2
     -   [intl](https://www.php.net/manual/en/book.intl.php)
 -   MySQL/MariaDB
 -   [MJML](https://mjml.io/api) api keys (not required and used for rendering emails. Make sure [sendmail](https://www.php.net/manual/en/mail.configuration.php) is configured properly.)
@@ -38,6 +38,12 @@ Note: after pulling updates for a new version you might be prompted to update th
 Download the code using the [stable branch](https://github.com/grandeljay/wishthis/tree/stable) and upload it to your server.
 
 Note: You will have to manually update wishthis by replacing all files with the changes from the `stable` branch.
+
+### Attention! The installer is broken in `v1.0.0`!
+
+To work around this, you can manually create a `/src/config/config.php` (please copy the `/src/config/config-sample.php`) and **remove** the part with the database information (currently four php constants).
+
+The installer should appear now. Make sure the `config.php` is writeable. After the isntallation has complete you can make the config read-only again.
 
 ## :trophy: Contributing
 
