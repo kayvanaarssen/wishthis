@@ -108,7 +108,7 @@ $user = User::getCurrent();
                     <p><?= __('As an open source project it remains') ?></p>
                     <div class="flex why-wishthis">
                         <ul class="ui list">
-                            <li class="item" data-content="<?= __('unless you want them') ?>">
+                            <li class="item">
                                 <i class="green check icon" aria-hidden="true"></i>
                                 <div class="content"><?= __('free of advertisements') ?></div>
                             </li>
@@ -125,6 +125,10 @@ $user = User::getCurrent();
                                     <?= __('without intrusive tracking') ?>
                                 </div>
                             </li>
+                            <li class="item">
+                                <i class="green check icon" aria-hidden="true"></i>
+                                <div class="content"><?= __('transparent') ?></div>
+                            </li>
                         </ul>
                         <ul class="ui list">
                             <li class="item">
@@ -137,7 +141,18 @@ $user = User::getCurrent();
                             </li>
                         </ul>
                     </div>
-                    <p><?= __('Plese note that wishthis automatically converts amazon links to affiliate links to help support the project financially.') ?></p>
+                    <p><?= __('What you should also know') ?></p>
+                    <div>
+                        <ul class="ui list">
+                            <li class="item">
+                                <i class="orange info icon" aria-hidden="true"></i>
+                                <div class="content">
+                                    <?= __('affiliate links') ?>
+                                    <p><?= __('amazon links are automatically converted to affiliate links to help support the project financially.') ?></p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="ui segment">

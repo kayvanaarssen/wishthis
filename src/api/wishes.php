@@ -93,10 +93,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 break;
             }
 
-            $wish_title          = addslashes(filter_input(INPUT_POST, 'wish_title', FILTER_SANITIZE_SPECIAL_CHARS));
-            $wish_description    = addslashes(filter_input(INPUT_POST, 'wish_description', FILTER_SANITIZE_SPECIAL_CHARS));
-            $wish_image          = addslashes(filter_input(INPUT_POST, 'wish_image', FILTER_SANITIZE_URL));
-            $wish_url            = addslashes(filter_input(INPUT_POST, 'wish_url', FILTER_SANITIZE_URL));
+            $wish_title          = addslashes(filter_input(INPUT_POST, 'wish_title', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+            $wish_description    = addslashes(filter_input(INPUT_POST, 'wish_description', FILTER_SANITIZE_SPECIAL_CHARS) ?? '');
+            $wish_image          = addslashes(filter_input(INPUT_POST, 'wish_image', FILTER_SANITIZE_URL) ?? '');
+            $wish_url            = addslashes(filter_input(INPUT_POST, 'wish_url', FILTER_SANITIZE_URL) ?? '');
             $wish_priority       = filter_input(INPUT_POST, 'wish_priority', FILTER_SANITIZE_NUMBER_INT);
             $wish_is_purchasable = isset($_POST['wish_is_purchasable']);
 
@@ -142,11 +142,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 }
 
                 /** Update */
-                $wish_title       = empty($wish_title)                                   ? null : substr($wish_title, 0, 128)      ;
-                $wish_description = empty($wish_description)                             ? null : $wish_description                ;
-                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? null : $wish_image                      ;
-                $wish_url         = empty($wish_url)                                     ? null : Wish::getAffiliateLink($wish_url);
-                $wish_priority    = empty($wish_priority)                                ? null : $wish_priority                   ;
+                $wish_title       = empty($wish_title) ? null : substr($wish_title, 0, 128);
+                $wish_description = empty($wish_description) ? null : $wish_description;
+                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? null : $wish_image;
+                $wish_url         = empty($wish_url) ? null : substr(Wish::getAffiliateLink($wish_url), 0, 255);
+                $wish_priority    = empty($wish_priority) ? null : $wish_priority;
 
                 $database
                 ->query(
@@ -229,10 +229,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
                 }
 
                 /** Update */
-                $wish_title       = empty($wish_title)                                   ? null : substr($wish_title, 0, 128)      ;
-                $wish_description = empty($wish_description)                             ? null : $wish_description                ;
-                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? null : $wish_image                      ;
-                $wish_url         = empty($wish_url)                                     ? null : Wish::getAffiliateLink($wish_url);
+                $wish_title       = empty($wish_title) ? null : substr($wish_title, 0, 128) ;
+                $wish_description = empty($wish_description) ? null : $wish_description ;
+                $wish_image       = empty($wish_image) || Wish::NO_IMAGE === $wish_image ? null : $wish_image ;
+                $wish_url         = empty($wish_url) ? null : substr(Wish::getAffiliateLink($wish_url), 0, 255);
 
                 $database
                 ->query(

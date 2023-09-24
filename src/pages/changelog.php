@@ -143,6 +143,13 @@ $page->navigation();
                                 <li>
                                     <?php
                                         /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('RewriteRules which caused HTTP 404 errors');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/93" target="_blank">#93</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
                                         echo __('Switching to wish "product" tab breaks view');
                                     ?>
                                     <a href="https://github.com/grandeljay/wishthis/issues/83" target="_blank">#83</a>
@@ -165,6 +172,12 @@ $page->navigation();
                                     <?php
                                         /** TRANSLATORS: Changelog: Fixed */
                                         echo __('Fulfilled wishes disappearing for wishlist owners');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('Deprecated notices on PHP 8.2');
                                     ?>
                                 </li>
                             </ul>
@@ -230,7 +243,7 @@ $page->navigation();
                             <ul>
                                 <li>
                                     <?php
-                                        /** TRANSLATORS: Changelog: Fixed */
+                                        /** TRANSLATORS: Changelog: Changed */
                                         echo  __('Decreased wish height on mobile devices');
                                     ?>
                                 </li>
