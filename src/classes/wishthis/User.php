@@ -315,7 +315,13 @@ class User
      */
     public function logIn(string $email = '', string $password = '', bool $user_login_is_persistent = false): bool
     {
-        global $database;
+        $database = new Database(
+            DATABASE_HOST,
+            DATABASE_NAME,
+            DATABASE_USER,
+            DATABASE_PASSWORD
+        );
+        $database->connect();
 
         $login_was_successful = false;
 
@@ -426,7 +432,7 @@ class User
         if (isset($_COOKIE[COOKIE_PERSISTENT])) {
             global $database;
 
-            $persistent = $database
+            $database
             ->query(
                 'DELETE FROM `sessions`
                        WHERE `session` = :session;',
@@ -493,7 +499,7 @@ class User
 
     public function getEmail(): string
     {
-        return $this->email;
+        return $this->email ?? '';
     }
 
     public function setEmail(string $email): void

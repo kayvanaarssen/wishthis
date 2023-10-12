@@ -55,8 +55,6 @@ $(function () {
             'onShow'    : function() {
                 var user_is_current = wishlist && wishlist.userId === parseInt($('[name="user-id"]').val());
 
-                console.log('user_is_current', user_is_current);
-
                 if (user_is_current) {
                     $('.ui.button.wish-fulfil').remove();
                 } else {
@@ -95,7 +93,7 @@ $(function () {
             }
         );
 
-        fetch('/?' + get_wish, { method: 'GET' })
+        fetch('/index.php?' + get_wish, { method: 'GET' })
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -149,7 +147,7 @@ $(function () {
 
         $(this).addClass('disabled loading');
 
-        fetch('/api/wishes', mark_as_fulfilled)
+        fetch('/index.php?page=api&module=wishes', mark_as_fulfilled)
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -179,7 +177,7 @@ $(function () {
 
         $(this).addClass('disabled loading');
 
-        fetch('/api/wishes', mark_as_fulfilled)
+        fetch('/index.php?page=api&module=wishes', mark_as_fulfilled)
         .then(handleFetchError)
         .then(handleFetchResponse)
         .then(function(response) {
@@ -279,7 +277,7 @@ $(function () {
                 )
             );
 
-            fetch('/api/wishes', {
+            fetch('/index.php?page=api&module=wishes', {
                 'method' : 'POST',
                 'body'   : wish_data,
             })
@@ -337,7 +335,7 @@ $(function () {
                     'wish_id' : wish_local.id
                 });
 
-                fetch('/api/wishes', {
+                fetch('/index.php?page=api&module=wishes', {
                     'method' : 'DELETE',
                     'body'   : wish_delete,
                 })
