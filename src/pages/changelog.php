@@ -23,6 +23,7 @@ $page->navigation();
             <div class="four wide column">
                 <div class="ui vertical pointing fluid menu profile">
                     <a class="item" data-tab="roadmap"><?= __('Roadmap') ?></a>
+                    <a class="item" data-tab="1-1-0"><?= __('1.1.0') ?></a>
                     <a class="item" data-tab="1-0-0"><?= __('1.0.0') ?></a>
                     <a class="item" data-tab="0-7-3"><?= __('0.7.3') ?></a>
                     <a class="item" data-tab="0-7-2"><?= __('0.7.2') ?></a>
@@ -73,13 +74,6 @@ $page->navigation();
                             <li>
                                 <?php
                                     /** TRANSLATORS: Changelog: Roadmap */
-                                    echo __('Delete account option');
-                                ?>
-                                <a href="https://github.com/grandeljay/wishthis/issues/69" target="_blank">#69</a>
-                            </li>
-                            <li>
-                                <?php
-                                    /** TRANSLATORS: Changelog: Roadmap */
                                     echo __('Notifications for fulfilled wishes');
                                 ?>
                             </li>
@@ -89,13 +83,123 @@ $page->navigation();
                                     echo __('Verify wishes are still available when attempting to fulfil them. Alternatively, a heartbeat which checks if all the wishes are still unfulfilled.');
                                 ?>
                             </li>
-                            <li>
-                                <?php
-                                    /** TRANSLATORS: Changelog: Roadmap */
-                                    echo __('Option to delete account');
-                                ?>
-                            </li>
                         </ul>
+                    </div>
+                </div>
+
+                <div class="ui tab" data-tab="1-1-0">
+                    <div class="ui segments">
+
+                        <div class="ui segment">
+                            <h2 class="ui header"><?= __('1.1.0') ?></h2>
+                        </div>
+
+                        <div class="ui segment">
+                            <h3 class="ui header"><?= __('Added') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Configuration flag to disable plausible.io calls');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/64" target="_blank">#64</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Add account delete option');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/69" target="_blank">#69</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Configuration flag to disable user registrations');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/70" target="_blank">#70</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('After creating an account your language is automatically set to your browser\'s (if it is available), instead of defaulting to en_GB.');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Amazon links are now automatically converted to affiliate links to help support wishthis financially.');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Added */
+                                        echo __('Prerequisite check during installation');
+                                    ?>
+                                </li>
+                            </ul>
+
+                            <h3 class="ui header"><?= __('Fixed') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('Wish price field not being set');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/107" target="_blank">#107</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('RewriteRules which caused HTTP 404 errors');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/93" target="_blank">#93</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('Switching to wish "product" tab breaks view');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/83" target="_blank">#83</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('Special characters not being displayed properly');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/80" target="_blank">#80</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('A fatal error when the CHANNELS constant is removed from the config');
+                                    ?>
+                                    <a href="https://github.com/grandeljay/wishthis/issues/74" target="_blank">#74</a>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('Fulfilled wishes disappearing for wishlist owners');
+                                    ?>
+                                </li>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Fixed */
+                                        echo __('Deprecated notices on PHP 8.2');
+                                    ?>
+                                </li>
+                            </ul>
+
+                            <h3 class="ui header"><?= __('Changed') ?></h3>
+                            <ul>
+                                <li>
+                                    <?php
+                                        /** TRANSLATORS: Changelog: Changed */
+                                        echo  __('Added button labels for mobile devices');
+                                    ?>
+                                </li>
+                            </ul>
+                        </div>
+
                     </div>
                 </div>
 
@@ -156,7 +260,7 @@ $page->navigation();
                             <ul>
                                 <li>
                                     <?php
-                                        /** TRANSLATORS: Changelog: Fixed */
+                                        /** TRANSLATORS: Changelog: Changed */
                                         echo  __('Decreased wish height on mobile devices');
                                     ?>
                                 </li>

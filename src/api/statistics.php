@@ -15,6 +15,8 @@ if (!isset($page)) {
     die('Direct access to this location is not allowed.');
 }
 
+$user = User::getCurrent();
+
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         if (isset($_GET['table'])) {
@@ -29,28 +31,29 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
                 foreach ($tables as $table) {
                     /** Get count */
-                    $count = new Cache\Query(
+                    $countQuery = new Cache\Query(
                         'SELECT COUNT(`id`) AS "count"
                            FROM `' . $table . '`;',
                         array(),
                         Duration::DAY
                     );
 
-                    $response['data'][$table] = $count->get();
+                    $count                    = $countQuery->get();
+                    $response['data'][$table] = $count;
 
                     /** Get last modified */
                     $user_time_zome = new \IntlDateFormatter(
-                        $_SESSION['user']->getLocale()
+                        $user->getLocale()
                     );
                     $user_time_zome = $user_time_zome->getTimeZoneId();
 
                     $datetimeFormatter            = new \IntlDateFormatter(
-                        $_SESSION['user']->getLocale(),
+                        $user->getLocale(),
                         \IntlDateFormatter::RELATIVE_FULL,
                         \IntlDateFormatter::SHORT,
                         $user_time_zome
                     );
-                    $response['data']['modified'] = $datetimeFormatter->format($count->getLastModified());
+                    $response['data']['modified'] = $datetimeFormatter->format($countQuery->getLastModified());
                 }
             } else {
                 $table = Sanitiser::getTable($_GET['table']);
